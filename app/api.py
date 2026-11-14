@@ -2,13 +2,15 @@ import logging
 from pathlib import Path
 
 from fastapi import FastAPI, File, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse
 
 from app.detectors.base import Detector, DetectorError
 from app.imaging import load_rgb_image
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
-ALLOWED_FORMATS = {"JPEG", "PNG", "WEBP"}
+# MPO = multi-picture JPEG, which many phone cameras produce.
+ALLOWED_FORMATS = {"JPEG", "MPO", "PNG", "WEBP"}
 INDEX_HTML = Path(__file__).resolve().parent.parent / "static" / "index.html"
 
 log = logging.getLogger("veritas")
@@ -35,13 +37,13 @@ def create_app(detector: Detector, min_confidence: float = 0.5) -> FastAPI:
         if len(data) > MAX_UPLOAD_BYTES:
             return _error(413, "The image is too large (maximum 10 MB).")
         try:
-            image = load_rgb_image(data)
+            image = await run_in_threadpool(load_rgb_image, data)
         except ValueError:
             return _error(415, "That file is not a valid JPEG, PNG or WebP image.")
         if image.format not in ALLOWED_FORMATS:
             return _error(415, "Only JPEG, PNG and WebP images are supported.")
         try:
-            result = detector.predict(data)
+            result = await run_in_threadpool(detector.predict, data)
         except DetectorError as exc:
             return _error(502, str(exc))
         except Exception:

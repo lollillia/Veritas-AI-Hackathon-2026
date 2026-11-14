@@ -130,8 +130,14 @@
     $("fill").parentElement.style.display = pct == null ? "none" : "block";
   }
 
+  function reset() {
+    chosen = null; go.disabled = true;
+    preview.style.display = "none"; $("prompt").style.display = "block";
+  }
+
   function choose(file) {
     result.style.display = "none";
+    reset();  // a rejected pick must not leave the previous photo selected
     if (!file) return;
     if (!OK_TYPES.includes(file.type)) return show("error", "Problem", "Unsupported file", null, "Please choose a JPEG, PNG or WebP image.");
     if (file.size > MAX) return show("error", "Problem", "File too large", null, "The maximum size is 10 MB.");
@@ -147,6 +153,8 @@
   ["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
   ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
   drop.addEventListener("drop", e => choose(e.dataTransfer.files[0]));
+  // A photo dropped just outside the zone must not make the browser navigate to it.
+  ["dragover", "drop"].forEach(ev => window.addEventListener(ev, e => e.preventDefault()));
 
   go.addEventListener("click", async () => {
     if (!chosen) return;
@@ -154,8 +162,8 @@
     try {
       const form = new FormData(); form.append("file", chosen);
       const res = await fetch("/predict", { method: "POST", body: form });
-      const data = await res.json();
-      if (!res.ok) return show("error", "Problem", "Couldn't analyse that image", null, data.error);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return show("error", "Problem", "Couldn't analyse that image", null, data.error || "The server returned an error (" + res.status + "). Please try again.");
       if (data.label === "not_corn_leaf") return show("notcorn", "Result", NAMES.not_corn_leaf, null, data.note);
       if (data.not_sure) return show("unsure", "Not sure", "Possibly " + NAMES[data.label].toLowerCase(), data.confidence, "The model isn't confident. Try a clearer, closer photo of a single leaf. " + data.note);
       show(data.label === "healthy" ? "ok" : "sick", "Result", NAMES[data.label], data.confidence, data.note);
