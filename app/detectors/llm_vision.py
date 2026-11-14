@@ -66,7 +66,7 @@ class LlmVisionDetector(Detector):
         try:
             reply = self.client.messages.create(
                 model=self.model,
-                max_tokens=300,
+                max_tokens=4096,  # thinking tokens count against this; a small value truncates the answer
                 messages=[{"role": "user", "content": content}],
             )
         except anthropic.APIError as exc:
@@ -76,4 +76,9 @@ class LlmVisionDetector(Detector):
             if isinstance(exc, anthropic.NotFoundError):
                 raise DetectorError(BAD_MODEL) from exc
             raise DetectorError(UNAVAILABLE) from exc
-        return _parse_reply(reply.content[0].text)
+        # The reply may start with non-text blocks (e.g. "thinking"); use the first text block.
+        text = next((b.text for b in reply.content if getattr(b, "type", None) == "text"), None)
+        if text is None:
+            log.error("vision reply had no text block (stop_reason=%s)", getattr(reply, "stop_reason", None))
+            raise DetectorError(UNREADABLE)
+        return _parse_reply(text)

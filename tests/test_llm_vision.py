@@ -18,15 +18,16 @@ def _img_bytes():
 
 
 class FakeClient:
-    def __init__(self, text=None, exc=None):
-        self.text, self.exc, self.kwargs = text, exc, None
+    def __init__(self, text=None, exc=None, blocks=None):
+        self.text, self.exc, self.blocks, self.kwargs = text, exc, blocks, None
         self.messages = SimpleNamespace(create=self._create)
 
     def _create(self, **kwargs):
         self.kwargs = kwargs
         if self.exc:
             raise self.exc
-        return SimpleNamespace(content=[SimpleNamespace(text=self.text)])
+        blocks = self.blocks if self.blocks is not None else [SimpleNamespace(type="text", text=self.text)]
+        return SimpleNamespace(content=blocks)
 
 
 def _predict(text):
@@ -119,3 +120,25 @@ def test_client_is_built_with_timeout_and_single_retry(monkeypatch):
     LlmVisionDetector()
     assert captured["timeout"] == 30.0
     assert captured["max_retries"] == 1
+
+
+def test_reply_with_leading_thinking_block_is_parsed():
+    blocks = [
+        SimpleNamespace(type="thinking", thinking="Let me look at the leaf..."),
+        SimpleNamespace(type="text", text='{"label": "common_rust", "confidence": 0.9, "note": "Pustules."}'),
+    ]
+    r = LlmVisionDetector(client=FakeClient(blocks=blocks)).predict(_img_bytes())
+    assert r.label == "common_rust"
+
+
+def test_reply_without_any_text_block_is_a_clear_error():
+    blocks = [SimpleNamespace(type="thinking", thinking="hmm")]
+    with pytest.raises(DetectorError, match="unreadable"):
+        LlmVisionDetector(client=FakeClient(blocks=blocks)).predict(_img_bytes())
+
+
+def test_request_leaves_room_for_thinking_plus_answer():
+    # Thinking tokens count against max_tokens; 300 truncated the JSON answer mid-sentence.
+    client = FakeClient('{"label": "healthy", "confidence": 0.8, "note": "ok"}')
+    LlmVisionDetector(client=client).predict(_img_bytes())
+    assert client.kwargs["max_tokens"] >= 2048
