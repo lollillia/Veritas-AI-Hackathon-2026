@@ -1,3 +1,171 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Veritas</title></head>
-<body><form><input type="file" name="file"></form></body></html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veritas · Corn Leaf Check</title>
+<style>
+  :root {
+    --bg: #f4f1e8; --card: #ffffff; --ink: #1f2a1c; --muted: #6b7566;
+    --green: #2f7d32; --green-soft: #e3f1e1;
+    --amber: #b7791f; --amber-soft: #fbf0d9;
+    --red: #b23a2e; --red-soft: #f9e3e0;
+    --grey: #5b6670; --grey-soft: #e9ecef;
+    --line: #d9d5c6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #151a14; --card: #1f261d; --ink: #e8efe4; --muted: #9aa595;
+      --green: #6fcf74; --green-soft: #22351f;
+      --amber: #e3b257; --amber-soft: #3a2f17;
+      --red: #ef8a7e; --red-soft: #3d1f1b;
+      --grey: #aeb8c0; --grey-soft: #2a3036;
+      --line: #36402f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex; justify-content: center; padding: 24px 16px;
+  }
+  main { width: 100%; max-width: 560px; }
+  header { text-align: center; margin: 8px 0 24px; }
+  h1 { margin: 0; font-size: 2rem; letter-spacing: -0.02em; }
+  h1 span { color: var(--green); }
+  header p { margin: 6px 0 0; color: var(--muted); }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,.05);
+  }
+  #drop {
+    border: 2px dashed var(--line); border-radius: 12px; min-height: 220px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 16px; cursor: pointer; transition: .15s; position: relative;
+  }
+  #drop:hover, #drop.over { border-color: var(--green); background: var(--green-soft); }
+  #drop:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
+  #drop .icon { font-size: 2.4rem; }
+  #drop small { color: var(--muted); }
+  #preview { max-width: 100%; max-height: 300px; border-radius: 10px; display: none; }
+  #file { display: none; }
+  button {
+    margin-top: 16px; width: 100%; padding: 14px; font-size: 1rem; font-weight: 600;
+    border: 0; border-radius: 12px; background: var(--green); color: #fff; cursor: pointer;
+  }
+  @media (prefers-color-scheme: dark) { button { color: #10200f; } }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  #result { margin-top: 20px; display: none; border-radius: 14px; padding: 18px; border: 1px solid; }
+  #result.ok     { background: var(--green-soft); border-color: var(--green); }
+  #result.sick   { background: var(--red-soft);   border-color: var(--red); }
+  #result.unsure { background: var(--amber-soft); border-color: var(--amber); }
+  #result.notcorn, #result.error { background: var(--grey-soft); border-color: var(--grey); }
+  #label { font-size: 1.4rem; font-weight: 700; margin: 0; }
+  #tag { font-size: .85rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .bar { height: 10px; border-radius: 6px; background: rgba(127,127,127,.25); margin: 12px 0 4px; overflow: hidden; }
+  .bar > div { height: 100%; width: 0; background: currentColor; transition: width .5s ease; }
+  #result.ok { color: var(--green); } #result.sick { color: var(--red); }
+  #result.unsure { color: var(--amber); } #result.notcorn, #result.error { color: var(--grey); }
+  #result p, #result #tag, #result #label, #pct { color: var(--ink); }
+  #pct { font-size: .9rem; color: var(--muted); }
+  .spinner {
+    display: none; width: 22px; height: 22px; margin: 16px auto 0; border-radius: 50%;
+    border: 3px solid var(--line); border-top-color: var(--green); animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  footer { text-align: center; color: var(--muted); font-size: .8rem; margin-top: 20px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Veri<span>tas</span></h1>
+    <p>Upload a corn leaf photo to check for disease.</p>
+  </header>
+
+  <section class="card">
+    <div id="drop" tabindex="0" role="button" aria-label="Choose or drop a corn leaf photo">
+      <img id="preview" alt="Selected leaf preview">
+      <div id="prompt">
+        <div class="icon">🌽</div>
+        <strong>Drop a photo here</strong><br>
+        <small>or click to choose · JPEG, PNG or WebP · up to 10 MB</small>
+      </div>
+    </div>
+    <input id="file" type="file" accept="image/jpeg,image/png,image/webp">
+    <button id="go" disabled>Analyse leaf</button>
+    <div class="spinner" id="spin" role="status" aria-label="Analysing"></div>
+
+    <div id="result" role="status" aria-live="polite">
+      <div id="tag"></div>
+      <h2 id="label"></h2>
+      <div class="bar"><div id="fill"></div></div>
+      <div id="pct"></div>
+      <p id="note"></p>
+    </div>
+  </section>
+  <footer>Demo only. Not a substitute for an agronomist's advice.</footer>
+</main>
+
+<script>
+(() => {
+  const NAMES = {
+    healthy: "Healthy leaf", gray_leaf_spot: "Gray leaf spot",
+    common_rust: "Common rust", northern_leaf_blight: "Northern leaf blight",
+    not_corn_leaf: "This doesn't look like a corn leaf",
+  };
+  const OK_TYPES = ["image/jpeg", "image/png", "image/webp"];
+  const MAX = 10 * 1024 * 1024;
+  const $ = id => document.getElementById(id);
+  const drop = $("drop"), input = $("file"), go = $("go"), spin = $("spin"),
+        result = $("result"), preview = $("preview");
+  let chosen = null;
+
+  function show(cls, tag, label, pct, note) {
+    result.className = cls; result.style.display = "block";
+    $("tag").textContent = tag; $("label").textContent = label;
+    $("note").textContent = note || "";
+    $("pct").textContent = pct == null ? "" : Math.round(pct * 100) + "% confidence";
+    $("fill").style.width = pct == null ? "0%" : Math.round(pct * 100) + "%";
+    $("fill").parentElement.style.display = pct == null ? "none" : "block";
+  }
+
+  function choose(file) {
+    result.style.display = "none";
+    if (!file) return;
+    if (!OK_TYPES.includes(file.type)) return show("error", "Problem", "Unsupported file", null, "Please choose a JPEG, PNG or WebP image.");
+    if (file.size > MAX) return show("error", "Problem", "File too large", null, "The maximum size is 10 MB.");
+    chosen = file;
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = "block"; $("prompt").style.display = "none";
+    go.disabled = false;
+  }
+
+  drop.addEventListener("click", () => input.click());
+  drop.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } });
+  input.addEventListener("change", () => choose(input.files[0]));
+  ["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", e => choose(e.dataTransfer.files[0]));
+
+  go.addEventListener("click", async () => {
+    if (!chosen) return;
+    go.disabled = true; spin.style.display = "block"; result.style.display = "none";
+    try {
+      const form = new FormData(); form.append("file", chosen);
+      const res = await fetch("/predict", { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok) return show("error", "Problem", "Couldn't analyse that image", null, data.error);
+      if (data.label === "not_corn_leaf") return show("notcorn", "Result", NAMES.not_corn_leaf, null, data.note);
+      if (data.not_sure) return show("unsure", "Not sure", "Possibly " + NAMES[data.label].toLowerCase(), data.confidence, "The model isn't confident. Try a clearer, closer photo of a single leaf. " + data.note);
+      show(data.label === "healthy" ? "ok" : "sick", "Result", NAMES[data.label], data.confidence, data.note);
+    } catch (err) {
+      show("error", "Problem", "Can't reach the server", null, "Check your connection and try again.");
+    } finally {
+      spin.style.display = "none"; go.disabled = false;
+    }
+  });
+})();
+</script>
+</body>
+</html>
