@@ -1,0 +1,17 @@
+# Which detector the website uses: hf_pretrained | finetuned | llm_vision
+detector: llm_vision
+
+# Below this confidence the UI shows "not sure".
+min_confidence: 0.5
+
+# Secrets are never stored here. Only the NAME of the environment variable.
+llm_vision:
+  model: claude-sonnet-5-5
+  api_key_env: ANTHROPIC_API_KEY
+
+hf_pretrained:
+  model_id: TODO-fill-in-after-model-selection   # HF_TOKEN env var is used if the model is private/gated
+  label_map: {}                                  # model label -> our label
+
+finetuned:
+  weights_path: models/corn                      # local dir saved by train/train.py
