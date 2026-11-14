@@ -1,5 +1,6 @@
 import base64
 import json
+import logging
 import os
 import re
 
@@ -8,8 +9,12 @@ import anthropic
 from app.detectors.base import LABELS, Detector, DetectorError, Result
 from app.imaging import load_rgb_image, to_jpeg_bytes
 
+log = logging.getLogger("veritas")
+
 UNREADABLE = "The model returned an unreadable answer; please try again."
 UNAVAILABLE = "The vision service is unavailable; please try again."
+BAD_KEY = "The vision API key was rejected; check ANTHROPIC_API_KEY."
+BAD_MODEL = "The configured vision model was not found; check llm_vision.model in config.yaml."
 
 PROMPT = f"""You are an expert plant pathologist. Look at the attached photo.
 The photo may NOT be a corn (maize) leaf; it could be anything.
@@ -38,7 +43,9 @@ def _parse_reply(text: str) -> Result:
 class LlmVisionDetector(Detector):
     def __init__(self, model: str = "claude-sonnet-5-5", api_key_env: str = "ANTHROPIC_API_KEY", client=None):
         self.model = model
-        self.client = client or anthropic.Anthropic(api_key=os.environ[api_key_env])
+        self.client = client or anthropic.Anthropic(
+            api_key=os.environ[api_key_env], timeout=30.0, max_retries=1
+        )
 
     def predict(self, image_bytes: bytes) -> Result:
         try:
@@ -63,5 +70,10 @@ class LlmVisionDetector(Detector):
                 messages=[{"role": "user", "content": content}],
             )
         except anthropic.APIError as exc:
+            log.exception("vision API call failed")
+            if isinstance(exc, (anthropic.AuthenticationError, anthropic.PermissionDeniedError)):
+                raise DetectorError(BAD_KEY) from exc
+            if isinstance(exc, anthropic.NotFoundError):
+                raise DetectorError(BAD_MODEL) from exc
             raise DetectorError(UNAVAILABLE) from exc
         return _parse_reply(reply.content[0].text)

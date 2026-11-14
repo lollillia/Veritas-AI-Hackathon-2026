@@ -116,3 +116,26 @@ def test_index_page_served():
     r = client_for().get("/")
     assert r.status_code == 200
     assert r.headers["content-type"].startswith("text/html")
+
+
+def test_mpo_phone_jpeg_is_accepted():
+    # Many phone cameras save multi-picture JPEGs, which Pillow reports as format "MPO".
+    buf = io.BytesIO()
+    im = Image.new("RGB", (16, 16), (0, 128, 0))
+    im.save(buf, format="MPO", save_all=True, append_images=[Image.new("RGB", (16, 16))])
+    assert Image.open(io.BytesIO(buf.getvalue())).format == "MPO"
+    assert _post(client_for(), buf.getvalue()).status_code == 200
+
+
+def test_detector_runs_off_the_event_loop():
+    import asyncio
+
+    class ThreadCheck(FakeDetector):
+        def predict(self, image_bytes):
+            try:
+                asyncio.get_running_loop()
+            except RuntimeError:
+                return super().predict(image_bytes)  # no loop in this thread: good
+            raise AssertionError("detector ran on the event loop thread")
+
+    assert _post(client_for(ThreadCheck()), _img()).status_code == 200
