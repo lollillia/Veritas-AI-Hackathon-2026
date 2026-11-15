@@ -35,7 +35,6 @@ and each dataset folder in `raw/` has its own `README.md` with per-class counts.
 | Folder | What it is |
 |---|---|
 | `raw/weather_cache/`, `raw/geocode_cache/` | cached Open-Meteo and OpenStreetMap responses, so the weather and city lookups can be regenerated without network calls |
-| `combined/` | legacy symlink folder (7,858 links) from the first training run, before the manifests existed; no longer used and safe to delete |
 
 ## Rebuilding
 
