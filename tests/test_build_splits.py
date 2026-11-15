@@ -149,7 +149,7 @@ def test_extra_source_and_custom_output_names_leave_the_original_manifest_alone(
     assert [r["label"] for r in v2 if r["source"] == "extra"] == ["healthy"] * 3
 
 
-def test_existing_images_keep_their_split_when_a_new_source_is_added(tmp_path):
+def test_existing_images_keep_their_split_when_the_new_source_has_no_near_duplicates_of_them(tmp_path):
     make_repo(tmp_path)
     _bulk(tmp_path, "data", "Healthy", 60, 1000)
     _bulk(tmp_path, "rlnst/RL-NST", "Leaf_Blight", 40, 2000)
@@ -179,3 +179,13 @@ def test_cli_parse_args_extra_sources_and_output():
     assert str(args.out) == "data/splits_v2.csv"
     default = parse_args([])
     assert default.add == {} and str(default.out) == "data/splits.csv"
+
+
+def test_near_duplicates_with_different_labels_are_not_grouped(tmp_path):
+    make_repo(tmp_path)
+    big = _structured(64)
+    _save(big, tmp_path / "data" / "raw" / "data" / "Healthy" / "smooth_a.png")
+    _save(big.resize((48, 48), Image.LANCZOS), tmp_path / "data" / "raw" / "data" / "Blight" / "smooth_b.jpg", quality=90)
+    build(tmp_path)
+    by = {Path(r["path"]).name: r for r in _manifest(tmp_path)}
+    assert by["smooth_a.png"]["group_id"] != by["smooth_b.jpg"]["group_id"]

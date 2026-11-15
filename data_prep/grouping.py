@@ -32,12 +32,16 @@ def _popcount(x: np.ndarray) -> np.ndarray:
     return (x * _H01) >> np.uint64(56)
 
 
-def group_ids(hashes: list[int], threshold: int = 4) -> list[int]:
+def group_ids(hashes: list[int], threshold: int = 4, keys: list | None = None) -> list[int]:
     """Group hashes whose Hamming distance is <= threshold (connected components).
 
-    Returns one id per input, numbered from 0 in order of first appearance.
+    With keys (e.g. labels), two hashes are only linked when their keys are equal: smooth,
+    low-texture photos of different classes can have close hashes, and chaining would
+    otherwise merge them. Returns one id per input, numbered from 0 in order of first appearance.
     """
     n = len(hashes)
+    if keys is not None and len(keys) != n:
+        raise ValueError("keys must have one entry per hash")
     if n == 0:
         return []
     arr = np.array(hashes, dtype=np.uint64)
@@ -56,7 +60,7 @@ def group_ids(hashes: list[int], threshold: int = 4) -> list[int]:
         rows, cols = np.nonzero(dist <= threshold)
         for r, c in zip(rows.tolist(), cols.tolist()):
             i = start + r
-            if c > i:
+            if c > i and (keys is None or keys[i] == keys[c]):
                 ri, rc = find(i), find(c)
                 if ri != rc:
                     parent[max(ri, rc)] = min(ri, rc)

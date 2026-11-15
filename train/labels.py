@@ -15,6 +15,7 @@ _BARE_CLASSES = {
     "northern_leaf_spot": "leaf_spot",
     "gls": "leaf_spot",
     "nls": "leaf_spot",
+    "eyespot": "leaf_spot",  # user decision: eyespot (Kabatiella) counts as a leaf spot
 }
 
 

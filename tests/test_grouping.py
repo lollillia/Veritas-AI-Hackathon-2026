@@ -82,3 +82,13 @@ def test_dhash_rejects_garbage(tmp_path):
     p.write_bytes(b"this is not an image")
     with pytest.raises(ValueError, match="not a valid image"):
         dhash(p)
+
+
+def test_group_ids_only_links_within_the_same_key():
+    # identical hashes but different labels must not be grouped (smooth leaves collide)
+    assert group_ids([0, 0, 1], keys=["healthy", "leaf_spot", "healthy"]) == [0, 1, 0]
+
+
+def test_group_ids_keys_must_match_length():
+    with pytest.raises(ValueError):
+        group_ids([0, 1], keys=["a"])

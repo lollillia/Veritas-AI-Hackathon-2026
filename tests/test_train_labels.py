@@ -28,6 +28,7 @@ from train.labels import folder_to_label
         # Multi-format maize dataset (RAW_Image folders)
         ("Healthy_Leaf", "healthy"),
         ("Corn_Leaf_Blight", "leaf_blight"),
+        ("Eyespot", "leaf_spot"),            # user decision: eyespot counts as a leaf spot
     ],
 )
 def test_folder_names_map_to_general_labels(folder, label):
@@ -37,7 +38,7 @@ def test_folder_names_map_to_general_labels(folder, label):
 @pytest.mark.parametrize(
     "folder",
     ["Tomato___healthy", "Tomato___Late_blight", "Potato___Late_blight", "Late_blight", "Rice_Brown_spot", "Streak_virus",
-     "Eyespot", "Maize_Streak_Disease", "Bacterial_Leaf_Streak"],
+     "Maize_Streak_Disease", "Bacterial_Leaf_Streak"],
 )
 def test_other_crops_unknown_names_and_streak_virus_are_ignored(folder):
     assert folder_to_label(folder) is None

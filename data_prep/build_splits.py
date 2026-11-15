@@ -73,7 +73,7 @@ def build(repo_root: Path, sources: dict[str, str] = SOURCES, out_dir: Path | No
         kept.append({**row, "md5": md5})
         hashes.append(h)
 
-    for row, gid in zip(kept, group_ids(hashes)):
+    for row, gid in zip(kept, group_ids(hashes, keys=[r["label"] for r in kept])):
         row["group_id"] = gid
     for row, split in zip(kept, assign_splits(kept)):
         row["split"] = split
