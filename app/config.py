@@ -44,11 +44,11 @@ def load_config(path: str = "config.yaml", env: Mapping[str, str] | None = None)
     if not isinstance(min_conf, (int, float)) or isinstance(min_conf, bool) or not 0 <= min_conf <= 1:
         raise ConfigError("min_confidence must be a number between 0 and 1")
 
-    if name == "llm_vision":
+    if name in ("llm_vision", "gated"):
         var = settings.get("api_key_env", "ANTHROPIC_API_KEY")
         if not env.get(var):
-            raise ConfigError(f"environment variable {var} is not set (needed by llm_vision)")
-    if name == "finetuned":
+            raise ConfigError(f"environment variable {var} is not set (needed by {name})")
+    if name in ("finetuned", "gated"):
         weights = settings.get("weights_path")
         if not weights or not Path(weights).exists():
             raise ConfigError(f"finetuned weights_path does not exist: {weights}")

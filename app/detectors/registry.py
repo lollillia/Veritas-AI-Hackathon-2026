@@ -7,6 +7,7 @@ DETECTOR_PATHS: dict[str, str] = {
     "hf_pretrained": "app.detectors.hf_pretrained:HfPretrainedDetector",
     "finetuned": "app.detectors.finetuned:FinetunedDetector",
     "llm_vision": "app.detectors.llm_vision:LlmVisionDetector",
+    "gated": "app.detectors.gated:GatedDetector",   # Claude corn-leaf check, then the fine-tuned model
 }
 
 

@@ -1,8 +1,8 @@
-# Which detector the website uses: hf_pretrained | finetuned | llm_vision
-detector: finetuned
+# Which detector the website uses: hf_pretrained | finetuned | llm_vision | gated
+detector: gated
 
 # Below this confidence the UI shows "not sure".
-min_confidence: 0.9   # corn_fungal_v6 cannot say "not a corn leaf"; 0.9 shows "not sure" for ~83% of non-corn photos
+min_confidence: 0.5   # with the gated detector, non-corn photos are caught by Claude; at 0.5 ~2% of corn photos show "not sure"
 
 # Secrets are never stored here. Only the NAME of the environment variable.
 llm_vision:
@@ -12,6 +12,13 @@ llm_vision:
 hf_pretrained:
   model_id: TODO-fill-in-after-model-selection   # HF_TOKEN env var is used if the model is private/gated
   label_map: {}                                  # model label -> our label
+
+# Claude checks "is this a corn leaf?" first; corn leaves then go to the fine-tuned model.
+# If Claude is unreachable, the fine-tuned model answers alone.
+gated:
+  model: claude-sonnet-5-5
+  api_key_env: ANTHROPIC_API_KEY
+  weights_path: models/corn_fungal_v6
 
 finetuned:
   weights_path: models/corn_fungal_v6            # local dir saved by train/train.py (11 labels, splits_v6)

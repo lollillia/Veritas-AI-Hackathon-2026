@@ -53,37 +53,46 @@ class LlmVisionDetector(Detector):
         )
 
     def predict(self, image_bytes: bytes) -> Result:
-        try:
-            jpeg = to_jpeg_bytes(load_rgb_image(image_bytes))
-        except ValueError as exc:
-            raise DetectorError("That file is not a valid image.") from exc
-        content = [
-            {
-                "type": "image",
-                "source": {
-                    "type": "base64",
-                    "media_type": "image/jpeg",
-                    "data": base64.b64encode(jpeg).decode(),
-                },
+        return _parse_reply(ask_vision(self.client, self.model, image_bytes, PROMPT))
+
+
+def ask_vision(client, model: str, image_bytes: bytes, prompt: str) -> str:
+    """Send one image and a prompt to Claude; return the first text block of the reply.
+
+    Raises DetectorError: "not a valid image" for bad input, otherwise BAD_KEY / BAD_MODEL / UNAVAILABLE /
+    UNREADABLE for service problems.
+    """
+    try:
+        jpeg = to_jpeg_bytes(load_rgb_image(image_bytes))
+    except ValueError as exc:
+        raise DetectorError("That file is not a valid image.") from exc
+    content = [
+        {
+            "type": "image",
+            "source": {
+                "type": "base64",
+                "media_type": "image/jpeg",
+                "data": base64.b64encode(jpeg).decode(),
             },
-            {"type": "text", "text": PROMPT},
-        ]
-        try:
-            reply = self.client.messages.create(
-                model=self.model,
-                max_tokens=4096,  # thinking tokens count against this; a small value truncates the answer
-                messages=[{"role": "user", "content": content}],
-            )
-        except anthropic.APIError as exc:
-            log.exception("vision API call failed")
-            if isinstance(exc, (anthropic.AuthenticationError, anthropic.PermissionDeniedError)):
-                raise DetectorError(BAD_KEY) from exc
-            if isinstance(exc, anthropic.NotFoundError):
-                raise DetectorError(BAD_MODEL) from exc
-            raise DetectorError(UNAVAILABLE) from exc
-        # The reply may start with non-text blocks (e.g. "thinking"); use the first text block.
-        text = next((b.text for b in reply.content if getattr(b, "type", None) == "text"), None)
-        if text is None:
-            log.error("vision reply had no text block (stop_reason=%s)", getattr(reply, "stop_reason", None))
-            raise DetectorError(UNREADABLE)
-        return _parse_reply(text)
+        },
+        {"type": "text", "text": prompt},
+    ]
+    try:
+        reply = client.messages.create(
+            model=model,
+            max_tokens=4096,  # thinking tokens count against this; a small value truncates the answer
+            messages=[{"role": "user", "content": content}],
+        )
+    except anthropic.APIError as exc:
+        log.exception("vision API call failed")
+        if isinstance(exc, (anthropic.AuthenticationError, anthropic.PermissionDeniedError)):
+            raise DetectorError(BAD_KEY) from exc
+        if isinstance(exc, anthropic.NotFoundError):
+            raise DetectorError(BAD_MODEL) from exc
+        raise DetectorError(UNAVAILABLE) from exc
+    # The reply may start with non-text blocks (e.g. "thinking"); use the first text block.
+    text = next((b.text for b in reply.content if getattr(b, "type", None) == "text"), None)
+    if text is None:
+        log.error("vision reply had no text block (stop_reason=%s)", getattr(reply, "stop_reason", None))
+        raise DetectorError(UNREADABLE)
+    return text

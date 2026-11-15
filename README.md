@@ -1,14 +1,15 @@
 # Veritas: Corn Leaf Disease Detector
 
-Upload a photo of a corn (maize) leaf and get one result: healthy or one of five fungal diseases (common rust, northern leaf blight, gray leaf spot, northern leaf spot, eyespot), or "not a corn leaf", with a confidence and a one-line note. Built as a hackathon demo.
+Upload a photo of a corn (maize) leaf and get one result: healthy or one of ten fungal diseases (common rust, southern rust, northern leaf blight, southern leaf blight, gray leaf spot, northern leaf spot, eyespot, Phaeosphaeria leaf spot, brown spot, Curvularia leaf spot), or "not a corn leaf", with a confidence and a one-line note. Built as a hackathon demo.
 
-The website is the same whichever model runs behind it. `config.yaml` picks one of three interchangeable detectors:
+The website is the same whichever model runs behind it. `config.yaml` picks one of four interchangeable detectors:
 
 | `detector:` | What it is | Needs |
 |---|---|---|
-| `llm_vision` (default) | A vision LLM (Claude) via API | `ANTHROPIC_API_KEY`, internet |
+| `gated` (current) | Claude checks "is this a corn leaf?", then our fine-tuned model names the disease. If Claude is unreachable, the fine-tuned model answers alone | `ANTHROPIC_API_KEY`, `requirements-ml.txt`, a trained model (`models/corn_fungal_v6`) |
+| `llm_vision` | A vision LLM (Claude) via API | `ANTHROPIC_API_KEY`, internet |
 | `hf_pretrained` | A pretrained corn-disease model from Hugging Face | `requirements-ml.txt`, a `model_id` and `label_map` in config |
-| `finetuned` | Our own model trained with `train/train.py` | `requirements-ml.txt`, a trained `models/corn/` |
+| `finetuned` | Our own model trained with `train/train.py`, alone | `requirements-ml.txt`, a trained model (`models/corn_fungal_v6`) |
 
 ## Setup
 
@@ -22,7 +23,7 @@ pip install -r requirements-ml.txt         # only for hf_pretrained / finetuned 
 
 Never put secrets in `config.yaml`; it only holds the *name* of an environment variable.
 
-- `ANTHROPIC_API_KEY`: key for the `llm_vision` backend.
+- `ANTHROPIC_API_KEY`: key for the `gated` and `llm_vision` backends.
 - `HF_TOKEN`: only needed for private or gated Hugging Face models (public ones need none). `huggingface-cli login` also works.
 
 Either `export` them in your shell (or set them in the PyCharm run configuration), or copy `.env.example` to `.env` and fill it in. `.env` is gitignored.
@@ -52,7 +53,7 @@ Note: a corn-only classifier has no "not a corn leaf" class, so it relies on the
 
 ### Training your own (`finetuned`)
 
-A trained model is in `models/corn/` (gitignored). Its accuracy and limitations are in `models/corn/MODEL_PERFORMANCE.md`: about 94% on held-out photos from its training sources, but only about 38% on a dataset it never saw. To use it, set `detector: finetuned` in `config.yaml` and restart.
+The website uses `models/corn_fungal_v6` (gitignored), trained on `data/splits_v6.csv` with all 11 labels: 91.6% on 1,719 held-out test photos, but about 75% on hard field photos (details in `models/corn_fungal_v6/MODEL_PERFORMANCE.md`). It was trained on corn leaves only, so on its own (`detector: finetuned`) it can never answer "not a corn leaf": in a check, 33 of 41 non-corn photos got a confident disease at the 0.5 threshold. The `gated` detector fixes that. In a live check, Claude rejected 41 of 41 non-corn photos (including 19 bean leaves) and accepted 59 of 60 corn test photos, taking about 2 seconds per photo. A history of all models is in `train/summaries/`.
 
 Data sources, licenses and label mapping are in `docs/data-sources.md`. Every image's source, label and train/dev/test split is recorded in `data/splits.csv` and `data/splits_v2.csv` (committed; the images themselves are not). Never regenerate these: they record what each model trained on; add data with `--base`.
 
