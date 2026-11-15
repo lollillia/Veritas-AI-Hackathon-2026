@@ -77,7 +77,7 @@ train/                 # script for option 2 (separate from the web app)
 
 Every detector implements `predict(image_bytes) -> Result`. `Result` has:
 
-- `label`: one of `healthy`, `common_rust`, `leaf_blight`, `leaf_spot`, `not_corn_leaf` (originally five labels with gray leaf spot and northern leaf blight; the diseases were later merged into the general `leaf_blight` and `leaf_spot` at the user's request)
+- `label`: one of `healthy`, `common_rust`, `northern_leaf_blight`, `gray_leaf_spot`, `northern_leaf_spot`, `eyespot`, `not_corn_leaf` (the label set changed twice at the user's request: merged into general `leaf_blight` / `leaf_spot`, then split into individual fungal diseases)
 - `confidence`: float 0–1
 - `note`: one short sentence for display
 
@@ -133,7 +133,7 @@ One HTML page: drag-and-drop zone, image preview, spinner while waiting, then a 
 ## My calls (not discussed with the user)
 
 - YAML for config.
-- The fixed label set (`healthy`, `common_rust`, `leaf_blight`, `leaf_spot`, `not_corn_leaf`) and the `min_confidence` threshold approach.
+- The fixed label set (healthy, five fungal diseases, `not_corn_leaf`) and the `min_confidence` threshold approach.
 - Training code lives in a separate `train/` folder and is not part of the running web app.
 - Fail-fast validation of the config at startup.
 - Suggested upload limits above.

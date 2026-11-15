@@ -9,6 +9,7 @@ Two manifests exist:
 | File | Images | What it is |
 |---|---|---|
 | `data/splits.csv` (v1) | 8,643 | `kaggle`, `rlnst`, `cds`, split 6,914 / 865 / 864. The model in `models/corn` was trained on its train split |
+| `data/splits_v4.csv` (v4) | 15,217 | v3 plus `mendeley_bd` (2,060 unique) and `neau` (856), append-only with `--base data/splits_v3.csv`: no v3 image moved. Labels are the individual fungal diseases (`northern_leaf_blight`, `gray_leaf_spot`, `northern_leaf_spot`, `eyespot`, `common_rust`, `healthy`); v1–v3 store the earlier merged labels |
 | `data/splits_v3.csv` (v3) | 12,301 | v2 plus `ndisan` (2,994 phone photos), built append-only with `--base data/splits_v2.csv`: all 9,307 v2 images keep their split; the new images are split 2,436 / 284 / 274 with each leaf's repeated shots kept together |
 | `data/splits_v2.csv` (v2) | 9,307 | v1 plus `maize_multiformat`, built **append-only** with `--base data/splits.csv`: all 8,643 v1 images keep their v1 split; the 664 new images are split 525 / 67 / 72 (groups of burst shots stay together, so not exactly 80/10/10) |
 
@@ -69,7 +70,10 @@ precipitation, rainy days (1 mm or more), mean relative humidity and the number 
 
 | `ndisan` | Kaggle "Corn Leaf Disease" (`ndisan/corn-leaf-disease`): 3120×4160 phone photos of single leaves on white paper, 5 shots per leaf. **Only `Daun Sehat`, `Hawar Daun`, `Karat Daun` are used** | https://www.kaggle.com/datasets/ndisan/corn-leaf-disease, downloaded by the user into `data/raw/kaggle_corn_leaf_disease`. Collected in Polagan Village, Sampang Regency, Madura, East Java, Indonesia (per the page) | 2,994 (v3 only) | MIT (per the page) |
 
-Totals: 8,643 images in v1, 9,307 in v2, 12,301 in v3.
+| `mendeley_bd` | Mendeley Data "Seasonal Corn Leaf Disease Dataset" (vy629dngm8 v1): field photos from several phones, Dec 2022 – Feb 2024 (EXIF dates on 1,203, GPS on 591). **Only `Healthy`, `Gray_leaf_spot`, `Common_rust` used** | https://data.mendeley.com/datasets/vy629dngm8/1 (confirmed by the user), folder `data/raw/Final corn dataset`. Gurudaspur, Natore, Bangladesh | 2,060 (v4 only; 604 duplicate files inside the dataset dropped) | CC BY 4.0 |
+| `neau` | Northeast Agricultural University maize leaves: field photos resized to 256×256 (EXIF dates 11 Jul – 11 Aug 2021, Huawei phone) | folder supplied by the user (`data/raw/Northeast Agricultural University`, details in its `README.txt`). Eastern experimental field, Harbin, China | 856 (v4 only) | unknown |
+
+Totals: 8,643 images in v1, 9,307 in v2, 12,301 in v3, 15,217 in v4.
 
 ### What was left out of `maize_multiformat`
 
@@ -87,7 +91,9 @@ The folder holds 5,789 files, but they are mostly copies of the same ~1,000 phot
 
 ## Label mapping
 
-Folder names are mapped to labels in `train/labels.py`.
+Folder names are mapped to labels in `train/labels.py`. Since v4 the labels are the individual fungal
+diseases; in the table below, rows written for v1–v3 show the label they map to today (blights to
+`northern_leaf_blight`, gray leaf spots to `gray_leaf_spot`, `nls` to `northern_leaf_spot`).
 
 | Source folder | Label | Basis |
 |---|---|---|
@@ -98,17 +104,10 @@ Folder names are mapped to labels in `train/labels.py`.
 | `maize_multiformat` `Healthy_Leaf`, `Common_Rust`, `Corn_Leaf_Blight`, `Gray_Leaf_Spot` | `healthy`, `common_rust`, `leaf_blight`, `leaf_spot` | folder name; "Corn Leaf Blight" assumed to be a leaf blight |
 | `ndisan` `Daun Sehat`, `Hawar Daun`, `Karat Daun` | `healthy`, `leaf_blight`, `common_rust` | Indonesian folder names; the dataset page lists healthy, leaf blight, leaf spot and leaf rust ("karat" assumed to be common rust) |
 | `ndisan` `Bercak Daun` | not used | copies and 180° rotations of Kaggle `smaranjitghose` images already in `kaggle` |
-| `maize_multiformat` `Eyespot` | `leaf_spot` | user decision: eyespot (Kabatiella) counts as a leaf spot |
+| `maize_multiformat` `Eyespot`, `neau` `maize northern anthracnose` | `eyespot` | user decisions: eyespot is its own label; northern anthracnose (usually *Kabatiella zeae*) is merged into it |
+| `mendeley_bd` `Healthy`, `Gray_leaf_spot`, `Common_rust`; `neau` `healthy maize leaves`, `maize northern leaf blight` | `healthy`, `gray_leaf_spot`, `common_rust`, `healthy`, `northern_leaf_blight` | folder names |
+| `mendeley_bd` `Bacterial Leaf Streak`, `Maize Chlorotic Mottle Virus` | not used | not fungal |
 | RL-NST `Streak_virus`, `maize_multiformat` `Maize_Streak_Disease`, `Bacterial_Leaf_Streak` | not used | excluded on purpose, and unmapped so they can never be trained on |
-
-## Downloaded but not yet used
-
-| Folder in `data/raw/` | Source | Classes (images) | Notes |
-|---|---|---|---|
-| `Final corn dataset` | Mendeley Data "Seasonal Corn Leaf Disease Dataset", https://data.mendeley.com/datasets/vy629dngm8/1 (CC BY 4.0), confirmed by the user | Healthy 1,038; Gray_leaf_spot 1,497; Common_rust 129; Bacterial Leaf Streak 190; Maize Chlorotic Mottle Virus 89 | farms around Gurudaspur, Natore, Bangladesh; not yet checked for duplicates; the last two classes have no label here |
-| `Northeast Agricultural University` | folder supplied by the user (download page not identified; license unknown); details from its `README.txt` | healthy 315; northern leaf blight 278; northern anthracnose 263 | experimental field in Harbin, China, 15 Jul – 15 Aug 2021; 256×256 field photos; anthracnose has no label here |
-
-Each raw dataset folder has a `README.md` with its source and per-class image counts (the folders are gitignored, so these copies live only on disk).
 
 ## Notes on `ndisan` (`data/raw/kaggle_corn_leaf_disease`)
 
