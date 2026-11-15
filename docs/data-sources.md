@@ -101,6 +101,15 @@ Folder names are mapped to labels in `train/labels.py`.
 | `maize_multiformat` `Eyespot` | `leaf_spot` | user decision: eyespot (Kabatiella) counts as a leaf spot |
 | RL-NST `Streak_virus`, `maize_multiformat` `Maize_Streak_Disease`, `Bacterial_Leaf_Streak` | not used | excluded on purpose, and unmapped so they can never be trained on |
 
+## Downloaded but not yet used
+
+| Folder in `data/raw/` | Source | Classes (images) | Notes |
+|---|---|---|---|
+| `Final corn dataset` | Mendeley Data "Seasonal Corn Leaf Disease Dataset", https://data.mendeley.com/datasets/vy629dngm8/1 (CC BY 4.0), confirmed by the user | Healthy 1,038; Gray_leaf_spot 1,497; Common_rust 129; Bacterial Leaf Streak 190; Maize Chlorotic Mottle Virus 89 | farms around Gurudaspur, Natore, Bangladesh; not yet checked for duplicates; the last two classes have no label here |
+| `Northeast Agricultural University` | folder supplied by the user (download page not identified; license unknown); details from its `README.txt` | healthy 315; northern leaf blight 278; northern anthracnose 263 | experimental field in Harbin, China, 15 Jul – 15 Aug 2021; 256×256 field photos; anthracnose has no label here |
+
+Each raw dataset folder has a `README.md` with its source and per-class image counts (the folders are gitignored, so these copies live only on disk).
+
 ## Notes on `ndisan` (`data/raw/kaggle_corn_leaf_disease`)
 
 - **Source:** https://www.kaggle.com/datasets/ndisan/corn-leaf-disease (confirmed by the user; folder names, file names, 4,000 images and 5.49 GB total all match). License on the page: MIT. The authors ask to be credited in academic use.
