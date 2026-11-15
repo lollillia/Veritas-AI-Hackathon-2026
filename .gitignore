@@ -8,3 +8,4 @@ __pycache__/
 data/*
 !data/splits*.csv
 !data/image_metadata.csv
+!data/weather.csv
