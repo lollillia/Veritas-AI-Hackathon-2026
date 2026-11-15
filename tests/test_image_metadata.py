@@ -73,3 +73,13 @@ def test_write_metadata_csv_one_row_per_manifest_row(tmp_path):
     assert list(out[0]) == COLUMNS
     assert out[0]["path"] == "img.jpg" and out[0]["capture_datetime"] == "2020-07-19T08:00:00" and out[0]["gps_lat"] == ""
     assert counts == {"images": 1, "capture_datetime": 1, "gps": 0, "camera": 0}
+
+
+def test_placeholder_gps_with_null_refs_and_zero_denominators_is_blank(tmp_path):
+    from PIL.TiffImagePlugin import IFDRational
+
+    p = tmp_path / "placeholder.jpg"
+    nan = IFDRational(0, 0)
+    _jpeg_with_exif(p, gps={1: "\x00", 2: (nan, nan, nan), 3: "\x00", 4: (nan, nan, nan)})
+    m = read_photo_metadata(p)
+    assert m["gps_lat"] == "" and m["gps_lon"] == ""

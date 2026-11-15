@@ -8,6 +8,7 @@ not published with the repository.
 """
 import argparse
 import csv
+import math
 from datetime import datetime
 from pathlib import Path
 
@@ -46,8 +47,11 @@ def read_photo_metadata(path: Path | str) -> dict:
     out["capture_datetime"] = _iso(sub.get(_DATETIME_ORIGINAL)) or _iso(exif.get(_DATETIME))
     try:
         if all(k in gps for k in (1, 2, 3, 4)):
-            out["gps_lat"] = round(_degrees(gps[2], gps[1]), GPS_DECIMALS)
-            out["gps_lon"] = round(_degrees(gps[4], gps[3]), GPS_DECIMALS)
+            lat, lon = _degrees(gps[2], gps[1]), _degrees(gps[4], gps[3])
+            # Some phones write placeholder GPS (null refs, 0/0 values); treat it as no location.
+            if math.isfinite(lat) and math.isfinite(lon) and str(gps[1]).strip("\x00") and str(gps[3]).strip("\x00"):
+                out["gps_lat"] = round(lat, GPS_DECIMALS)
+                out["gps_lon"] = round(lon, GPS_DECIMALS)
     except (TypeError, ValueError, ZeroDivisionError):
         out["gps_lat"] = out["gps_lon"] = ""
     camera = " ".join(str(exif.get(t, "")).strip().rstrip("\x00") for t in (_MAKE, _MODEL)).strip()
