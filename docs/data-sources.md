@@ -69,6 +69,18 @@ Folder names are mapped to labels in `train/labels.py`.
 | `maize_multiformat` `Eyespot` | `leaf_spot` | user decision: eyespot (Kabatiella) counts as a leaf spot |
 | RL-NST `Streak_virus`, `maize_multiformat` `Maize_Streak_Disease`, `Bacterial_Leaf_Streak` | not used | excluded on purpose, and unmapped so they can never be trained on |
 
+## Downloaded but not yet in a manifest
+
+### `data/raw/kaggle_corn_leaf_disease` — Kaggle `ndisan/corn-leaf-disease`
+
+- **Source:** https://www.kaggle.com/datasets/ndisan/corn-leaf-disease (confirmed by the user; folder names, file names, 4,000 images and 5.49 GB total all match). License on the page: MIT. The authors ask to be credited in academic use.
+- **Where:** per the page, "a corn field with an area of approximately 10 hectares owned by the Department of Agriculture in Polagan Village, Sampang District" (Sampang Regency, Madura, East Java, Indonesia). The photos carry no usable GPS (placeholder tags only).
+- **How:** 16 MP phone camera (EXIF: vivo V2029, 3120×4160), white paper behind each leaf, **5 photos of each leaf**. Labels by the Sampang Regency agriculture department, validated by the regional plant-pest observation (POPT) coordinator.
+- **When:** EXIF capture dates on 11 days between 11 April and 30 July 2023. The page says shooting was at 12:00–14:00 WIB, but EXIF times are 05:00–08:00 and 15:00–17:00, so the camera clock is probably not reliable.
+- **Folders (Indonesian):** `Daun Sehat` healthy, `Hawar Daun` leaf blight, `Karat Daun` leaf rust (the 3,000 phone photos, 1,000 each), and `Bercak Daun` leaf spot.
+- **Do not use `Bercak Daun`:** the page says the data was combined with the Kaggle `smaranjitghose` corn dataset; 574 of these files are byte-identical to images already in our `kaggle` source and most of the rest are those images rotated 180° (`augmented_…`), which near-duplicate grouping cannot catch.
+- **If added:** group the 5 shots of each leaf (consecutive filename timestamps, e.g. `IMG_20230728_171448`) so they stay in one split; files ending in ` (1)` are likely copies.
+
 ## Looked at and not used
 
 | Candidate | Why it was not used |
@@ -76,6 +88,8 @@ Folder names are mapped to labels in `train/labels.py`.
 | Hugging Face `Prachi1234/corn-leaf-disease` | byte-identical to the Kaggle dataset (all 4,186 unique images) |
 | Hugging Face `Project-AgML/corn_maize_leaf_disease` | byte-identical to the Kaggle dataset, labels included |
 | Kaggle `yusufmurtaza01/corn-leaf-diseases` (YOLO detection format) | 3,992 of its 4,027 images are byte-identical to the Kaggle set |
+| Kaggle `taufiqnoviant/daun-jagung` | a different set (3 classes, Kediri Regency, East Java; CC BY-NC-ND 4.0); not downloaded |
+| Mendeley `vy629dngm8` v1 ("Seasonal Corn Leaf Disease Dataset", Natore, Bangladesh; CC BY 4.0) | link checked; matches no local folder |
 | OpenDataLab `OpenDataLab/CD_and_S` | the page could not be read; the OSF source above was used instead |
 | Kaggle notebook `fannysalsabila/plant-disease-classification-using-resnet` | code only; its listed data source is a grape dataset |
 
