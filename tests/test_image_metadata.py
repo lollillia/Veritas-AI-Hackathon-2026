@@ -119,3 +119,21 @@ def test_city_comes_from_photo_gps_otherwise_from_the_site(tmp_path):
     assert out[0]["capture_date"] == "2020-08-16" and out[1]["capture_date"] == "2023-07-28"
     assert COLUMNS[-2:] == ["site", "city"]
     assert not {"capture_datetime", "city_lat", "city_lon", "city_basis", "site_lat", "site_lon", "site_basis"} & set(COLUMNS)
+
+
+def test_per_folder_copies_split_the_metadata_by_raw_dataset_folder(tmp_path):
+    from data_prep.image_metadata import write_per_folder
+
+    rows = [{c: "" for c in COLUMNS} | {"path": p, "md5": m, "source": s} for p, m, s in [
+        ("data/raw/cds/train/gls/a.jpg", "1", "cds"), ("data/raw/cds/test/nlb/b.jpg", "2", "cds"),
+        ("data/raw/Final corn dataset/Healthy/c.jpg", "3", "mendeley_bd"),
+        ("data/raw/gone/x.jpg", "4", "old")]]                     # folder no longer on disk: skipped
+    for folder in ("cds", "Final corn dataset"):
+        (tmp_path / "data" / "raw" / folder).mkdir(parents=True)
+    written = write_per_folder(rows, tmp_path / "data" / "raw")
+    assert written == {"cds": 2, "Final corn dataset": 1}
+    with open(tmp_path / "data" / "raw" / "cds" / "image_metadata.csv", newline="") as f:
+        out = list(csv.DictReader(f))
+    assert [r["md5"] for r in out] == ["1", "2"] and list(out[0]) == COLUMNS
+    assert (tmp_path / "data" / "raw" / "Final corn dataset" / "image_metadata.csv").is_file()
+    assert not (tmp_path / "data" / "raw" / "gone").exists()

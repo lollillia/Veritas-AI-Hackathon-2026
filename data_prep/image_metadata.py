@@ -1,6 +1,8 @@
 """Capture date, GPS location and camera for every image in a manifest, where the photo has them.
 
-    python -m data_prep.image_metadata [--manifest data/splits_v3.csv] [--out data/image_metadata.csv]
+    python -m data_prep.image_metadata [--manifest data/splits_v5.csv] [--out data/image_metadata.csv]
+
+Also writes each dataset folder's rows to data/raw/<folder>/image_metadata.csv.
 
 Values come from the images' embedded EXIF data (capture time reduced to its date); "site" is the
 dataset-level location where the source documents one; "city" is looked up from the photo's GPS, or
@@ -99,17 +101,36 @@ def write_metadata_csv(rows: list[dict], repo_root: Path, out_path: Path, resolv
     return counts
 
 
+def write_per_folder(rows: list[dict], raw_root: Path) -> dict[str, int]:
+    """Also write each dataset folder's rows to data/raw/<folder>/image_metadata.csv (same columns)."""
+    by_folder: dict[str, list[dict]] = {}
+    for row in rows:
+        parts = Path(row["path"]).parts
+        if len(parts) > 3 and parts[:2] == ("data", "raw"):
+            by_folder.setdefault(parts[2], []).append(row)
+    by_folder = {k: v for k, v in by_folder.items() if (Path(raw_root) / k).is_dir()}   # skip missing folders
+    for folder, folder_rows in by_folder.items():
+        with open(Path(raw_root) / folder / "image_metadata.csv", "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=COLUMNS, lineterminator="\n")
+            writer.writeheader()
+            writer.writerows(folder_rows)
+    return {k: len(v) for k, v in by_folder.items()}
+
+
 def main() -> None:
     from data_prep.manifest import read_manifest
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--manifest", default=Path("data/splits_v3.csv"), type=Path)
+    parser.add_argument("--manifest", default=Path("data/splits_v5.csv"), type=Path)
     parser.add_argument("--out", default=Path("data/image_metadata.csv"), type=Path)
     args = parser.parse_args()
     cache = Path("data/raw/geocode_cache")
     counts = write_metadata_csv(read_manifest(args.manifest), Path.cwd(), args.out,
                                 resolve_city=lambda lat, lon: reverse_city(lat, lon, cache))
     print(f"wrote {args.out}: {counts}")
+    with open(args.out, newline="") as f:
+        per_folder = write_per_folder(list(csv.DictReader(f)), Path("data/raw"))
+    print(f"wrote image_metadata.csv into {len(per_folder)} dataset folders: {per_folder}")
 
 
 if __name__ == "__main__":
