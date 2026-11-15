@@ -83,3 +83,17 @@ def test_placeholder_gps_with_null_refs_and_zero_denominators_is_blank(tmp_path)
     _jpeg_with_exif(p, gps={1: "\x00", 2: (nan, nan, nan), 3: "\x00", 4: (nan, nan, nan)})
     m = read_photo_metadata(p)
     assert m["gps_lat"] == "" and m["gps_lon"] == ""
+
+
+def test_site_column_comes_from_documented_dataset_locations(tmp_path):
+    from data_prep.image_metadata import SOURCE_SITES
+
+    img = tmp_path / "img.jpg"
+    _jpeg_with_exif(img)
+    rows = [{"path": "img.jpg", "md5": "a", "source": "ndisan"}, {"path": "img.jpg", "md5": "b", "source": "rlnst"}]
+    write_metadata_csv(rows, tmp_path, tmp_path / "meta.csv")
+    with open(tmp_path / "meta.csv", newline="") as f:
+        out = list(csv.DictReader(f))
+    assert "site" in COLUMNS
+    assert out[0]["site"] == SOURCE_SITES["ndisan"] and "Sampang" in out[0]["site"]
+    assert out[1]["site"] == ""

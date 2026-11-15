@@ -67,3 +67,56 @@ def group_ids(hashes: list[int], threshold: int = 4, keys: list | None = None) -
 
     ids: dict[int, int] = {}
     return [ids.setdefault(find(i), len(ids)) for i in range(n)]
+
+
+def _number(parent: list[int]) -> list[int]:
+    def find(i: int) -> int:
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+    ids: dict[int, int] = {}
+    return [ids.setdefault(find(i), len(ids)) for i in range(len(parent))]
+
+
+def _union(parent: list[int], a: int, b: int) -> None:
+    def find(i: int) -> int:
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+    ra, rb = find(a), find(b)
+    if ra != rb:
+        parent[max(ra, rb)] = min(ra, rb)
+
+
+def burst_group_ids(times: list, keys: list, window_s: float = 20.0) -> list[int]:
+    """Group shots taken within window_s seconds of the previous shot with the same key (chained).
+
+    times are datetimes or None (no timestamp: the image stays alone). Used for datasets that
+    photograph each leaf several times in a row, so all shots of one leaf stay in one split.
+    """
+    parent = list(range(len(times)))
+    by_key: dict = {}
+    for i, (t, k) in enumerate(zip(times, keys)):
+        if t is not None:
+            by_key.setdefault(k, []).append((t, i))
+    for shots in by_key.values():
+        shots.sort()
+        for (t1, i1), (t2, i2) in zip(shots, shots[1:]):
+            if (t2 - t1).total_seconds() <= window_s:
+                _union(parent, i1, i2)
+    return _number(parent)
+
+
+def merge_partitions(a: list[int], b: list[int]) -> list[int]:
+    """Union of two groupings of the same items: items grouped in either end up together."""
+    parent = list(range(len(a)))
+    for ids in (a, b):
+        first: dict[int, int] = {}
+        for i, g in enumerate(ids):
+            if g in first:
+                _union(parent, first[g], i)
+            else:
+                first[g] = i
+    return _number(parent)

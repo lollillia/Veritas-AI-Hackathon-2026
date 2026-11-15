@@ -2,7 +2,8 @@
 
     python -m data_prep.image_metadata [--manifest data/splits_v2.csv] [--out data/image_metadata.csv]
 
-Values come from the images' embedded EXIF data. Blank cells mean the image carries no such data
+Values come from the images' embedded EXIF data; "site" is the dataset-level location where the
+source documents one. Blank cells mean the image carries no such data
 (most datasets strip it). GPS is rounded to 3 decimals (about 110 m) so exact farm locations are
 not published with the repository.
 """
@@ -14,7 +15,12 @@ from pathlib import Path
 
 from PIL import Image
 
-COLUMNS = ["path", "md5", "source", "capture_datetime", "gps_lat", "gps_lon", "camera"]
+COLUMNS = ["path", "md5", "source", "capture_datetime", "gps_lat", "gps_lon", "camera", "site"]
+# Dataset-level collection site, where the source documents one (not from the photo itself unless stated).
+SOURCE_SITES = {
+    "cds": "near West Lafayette, Indiana, USA (from photo GPS)",
+    "ndisan": "Polagan Village, Sampang Regency, Madura, East Java, Indonesia (dataset page)",
+}
 GPS_DECIMALS = 3
 _EXIF_IFD, _GPS_IFD = 0x8769, 0x8825
 _DATETIME_ORIGINAL, _DATETIME = 0x9003, 0x0132
@@ -69,7 +75,8 @@ def write_metadata_csv(rows: list[dict], repo_root: Path, out_path: Path) -> dic
         writer.writeheader()
         for row in rows:
             meta = read_photo_metadata(Path(repo_root) / row["path"])
-            writer.writerow({"path": row["path"], "md5": row["md5"], "source": row["source"], **meta})
+            writer.writerow({"path": row["path"], "md5": row["md5"], "source": row["source"], **meta,
+                             "site": SOURCE_SITES.get(row["source"], "")})
             counts["images"] += 1
             counts["capture_datetime"] += bool(meta["capture_datetime"])
             counts["gps"] += meta["gps_lat"] != ""

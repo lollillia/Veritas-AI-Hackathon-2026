@@ -15,7 +15,12 @@ _BARE_CLASSES = {
     "northern_leaf_spot": "leaf_spot",
     "gls": "leaf_spot",
     "nls": "leaf_spot",
-    "eyespot": "leaf_spot",  # user decision: eyespot (Kabatiella) counts as a leaf spot
+    "eyespot": "leaf_spot",
+    # Kaggle ndisan/corn-leaf-disease (Indonesian). Its "Bercak Daun" (leaf spot) folder is copies and
+    # rotations of the Kaggle corn set, so it is deliberately not mapped.
+    "daun_sehat": "healthy",
+    "hawar_daun": "leaf_blight",
+    "karat_daun": "common_rust",  # user decision: eyespot (Kabatiella) counts as a leaf spot
 }
 
 

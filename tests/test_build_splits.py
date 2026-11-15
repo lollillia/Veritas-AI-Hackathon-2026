@@ -312,3 +312,26 @@ def test_new_image_bridging_base_images_in_different_splits_is_left_out(tmp_path
         dropped = {Path(d["path"]).name: d["reason"] for d in csv.DictReader(f)}
     assert dropped["bridge.png"] == "bridges_base_splits"
     assert counts["new_dropped_bridging"] == 1
+
+
+def test_filename_time_parses_phone_names_only():
+    from datetime import datetime
+
+    from data_prep.build_splits import filename_time
+
+    assert filename_time("IMG_20230728_171448.jpg") == datetime(2023, 7, 28, 17, 14, 48)
+    assert filename_time("IMG_20230729_071305 (1).jpg") == datetime(2023, 7, 29, 7, 13, 5)
+    assert filename_time("IMG_756.jpeg") is None and filename_time("Corn_Blight (77).jpg") is None
+
+
+def test_shots_seconds_apart_share_a_group_and_split_even_if_they_look_different(tmp_path):
+    make_repo(tmp_path)
+    folder = tmp_path / "data" / "raw" / "data" / "Healthy"
+    _save(_noise(7001), folder / "IMG_20230728_171448.jpg", format="JPEG")
+    _save(_noise(7002), folder / "IMG_20230728_171500.jpg", format="JPEG")        # 12 s later
+    _save(_noise(7003), folder / "IMG_20230728_171600.jpg", format="JPEG")        # 60 s later
+    build(tmp_path)
+    by = {Path(r["path"]).name: r for r in _manifest(tmp_path)}
+    a, b, c = by["IMG_20230728_171448.jpg"], by["IMG_20230728_171500.jpg"], by["IMG_20230728_171600.jpg"]
+    assert a["group_id"] == b["group_id"] and a["split"] == b["split"]
+    assert c["group_id"] != a["group_id"]

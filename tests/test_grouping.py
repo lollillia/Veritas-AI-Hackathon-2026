@@ -92,3 +92,26 @@ def test_group_ids_only_links_within_the_same_key():
 def test_group_ids_keys_must_match_length():
     with pytest.raises(ValueError):
         group_ids([0, 1], keys=["a"])
+
+
+def test_burst_groups_chain_shots_within_the_window_per_key():
+    from datetime import datetime, timedelta
+
+    from data_prep.grouping import burst_group_ids
+
+    t0 = datetime(2023, 7, 28, 17, 14, 0)
+    times = [t0, t0 + timedelta(seconds=12), t0 + timedelta(seconds=30),     # chained: 12 s, then 18 s
+             t0 + timedelta(seconds=80),                                      # 50 s later: new burst
+             t0 + timedelta(seconds=5),                                       # other folder: separate
+             None]                                                            # no timestamp: alone
+    keys = ["a", "a", "a", "a", "b", "a"]
+    ids = burst_group_ids(times, keys, window_s=20)
+    assert ids[0] == ids[1] == ids[2]
+    assert len({ids[0], ids[3], ids[4], ids[5]}) == 4
+
+
+def test_merge_partitions_unions_both_groupings():
+    from data_prep.grouping import merge_partitions
+
+    assert merge_partitions([0, 0, 1, 2, 3], [0, 1, 1, 2, 3]) == [0, 0, 0, 1, 2]
+    assert merge_partitions([], []) == []

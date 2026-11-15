@@ -8,11 +8,13 @@ near-duplicate images, assigns splits, and writes data/splits.csv and data/split
 """
 import argparse
 import hashlib
+import re
 import sys
+from datetime import datetime
 from collections import Counter
 from pathlib import Path
 
-from data_prep.grouping import dhash, group_ids
+from data_prep.grouping import burst_group_ids, dhash, group_ids, merge_partitions
 from data_prep.manifest import read_manifest, write_dropped, write_manifest
 from data_prep.splitting import assign_splits
 from train.labels import folder_to_label
@@ -22,8 +24,23 @@ SOURCES: dict[str, str] = {
     "rlnst": "data/raw/rlnst/RL-NST",
     "cds": "data/raw/cds",
 }
+# Shots whose phone-style file names (IMG_YYYYMMDD_HHMMSS) are this close are treated as the same
+# leaf: the ndisan dataset photographs each leaf 5 times in a row.
+BURST_WINDOW_S = 20
+_PHONE_NAME = re.compile(r"IMG_(\d{8})_(\d{6})")
 # .heic is scanned only so unreadable phone photos show up in the dropped list.
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".heic"}
+
+
+def filename_time(name: str) -> datetime | None:
+    """Capture time encoded in a phone-style file name, or None."""
+    m = _PHONE_NAME.search(name)
+    if not m:
+        return None
+    try:
+        return datetime.strptime(m.group(1) + m.group(2), "%Y%m%d%H%M%S")
+    except ValueError:
+        return None
 
 
 def scan_source(name: str, root: Path, repo_root: Path) -> list[dict]:
@@ -84,7 +101,10 @@ def build(repo_root: Path, sources: dict[str, str] = SOURCES, out_dir: Path | No
     kept.sort(key=lambda r: r["path"])
     dropped.sort(key=lambda d: d["path"])
 
-    for row, gid in zip(kept, group_ids([r.pop("_hash") for r in kept], keys=[r["label"] for r in kept])):
+    look_alike = group_ids([r.pop("_hash") for r in kept], keys=[r["label"] for r in kept])
+    bursts = burst_group_ids([filename_time(Path(r["path"]).name) for r in kept],
+                             [(r["source"], r["original_folder"], r["label"]) for r in kept], BURST_WINDOW_S)
+    for row, gid in zip(kept, merge_partitions(look_alike, bursts)):
         row["group_id"] = gid
 
     extra: dict = {}
