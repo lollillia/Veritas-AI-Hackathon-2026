@@ -2,6 +2,7 @@
 
 Usage:
     python -m train.train --data <imagefolder dir> --out models/corn --epochs 3
+    python -m train.train --manifest data/splits.csv --out models/corn --epochs 5
 
 <imagefolder dir> has one sub-folder per class (e.g. PlantVillage layout). Only folders
 recognised by train.labels.folder_to_label are used; all others are ignored.
@@ -26,30 +27,59 @@ def collect_samples(data_dir: Path) -> list[tuple[Path, str]]:
     return samples
 
 
-def main() -> None:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data", required=True, type=Path)
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--data", type=Path, help="image-folder dataset; 10%% is held out at random")
+    source.add_argument("--manifest", type=Path, help="data/splits.csv from data_prep.build_splits")
+    parser.add_argument("--repo-root", default=".", type=Path, help="manifest paths are relative to this")
     parser.add_argument("--out", default="models/corn", type=Path)
     parser.add_argument("--epochs", default=3, type=int)
     parser.add_argument("--base-model", default="google/mobilenet_v2_1.0_224")
     parser.add_argument("--val-fraction", default=0.1, type=float)
-    args = parser.parse_args()
+    return parser.parse_args(argv)
+
+
+def samples_from_manifest(manifest: Path, root: Path) -> tuple[list[tuple[Path, str]], list[tuple[Path, str]]]:
+    """(train samples, dev samples) from the manifest. The test split is never returned."""
+    from data_prep.manifest import read_manifest, samples_for_split
+
+    rows = read_manifest(manifest)
+    try:
+        train = samples_for_split(rows, "train", root)
+        dev = samples_for_split(rows, "dev", root)
+    except FileNotFoundError as exc:
+        raise SystemExit(str(exc))
+    for name, part in (("train", train), ("dev", dev)):
+        if not part:
+            raise SystemExit(f"No {name} rows in {manifest}")
+    return train, dev
+
+
+def main() -> None:
+    args = parse_args()
 
     import torch
     from PIL import Image
     from transformers import AutoImageProcessor, AutoModelForImageClassification, Trainer, TrainingArguments
 
-    samples = collect_samples(args.data)
-    if not samples:
-        raise SystemExit(f"No corn class folders with images found under {args.data}")
+    if args.manifest:
+        train_samples, val_samples = samples_from_manifest(args.manifest, args.repo_root)
+        samples = train_samples + val_samples
+        print(f"manifest: {len(train_samples)} train, {len(val_samples)} dev images")
+    else:
+        samples = collect_samples(args.data)
+        if not samples:
+            raise SystemExit(f"No corn class folders with images found under {args.data}")
     labels = sorted({label for _, label in samples})
     label2id = {label: i for i, label in enumerate(labels)}
     id2label = {i: label for label, i in label2id.items()}
     print(f"{len(samples)} images, classes: {labels}")
 
-    random.Random(0).shuffle(samples)
-    n_val = max(1, int(len(samples) * args.val_fraction))
-    val_samples, train_samples = samples[:n_val], samples[n_val:]
+    if not args.manifest:
+        random.Random(0).shuffle(samples)
+        n_val = max(1, int(len(samples) * args.val_fraction))
+        val_samples, train_samples = samples[:n_val], samples[n_val:]
 
     processor = AutoImageProcessor.from_pretrained(args.base_model)
 
