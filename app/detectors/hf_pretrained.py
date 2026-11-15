@@ -8,8 +8,10 @@ log = logging.getLogger("veritas")
 NOTES: dict[str, str] = {
     "healthy": "No signs of disease were detected on this leaf.",
     "common_rust": "Small, round to elongated reddish-brown pustules appear on both leaf surfaces.",
-    "leaf_blight": "Long, cigar-shaped gray-green to tan lesions spread across the leaf.",
-    "leaf_spot": "Small to rectangular tan or gray lesions with darker borders appear on the leaf.",
+    "northern_leaf_blight": "Long, cigar-shaped gray-green to tan lesions spread across the leaf.",
+    "gray_leaf_spot": "Narrow, rectangular tan to gray lesions run parallel to the leaf veins.",
+    "northern_leaf_spot": "Small oval to oblong tan lesions, often with darker borders, are scattered across the leaf.",
+    "eyespot": "Many small round spots with pale centres and dark rings, often with yellow halos, dot the leaf.",
     "not_corn_leaf": "This image does not appear to show a corn leaf.",
 }
 

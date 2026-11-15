@@ -22,8 +22,9 @@ The photo may NOT be a corn (maize) leaf; it could be anything.
 Classify it with exactly one of these labels:
 {", ".join(LABELS)}
 
-"leaf_blight" covers any blight (e.g. northern corn leaf blight); "leaf_spot" covers any leaf
-spot disease (e.g. gray leaf spot, northern leaf spot).
+These are fungal diseases: "common_rust" (Puccinia sorghi), "northern_leaf_blight" (Exserohilum
+turcicum), "gray_leaf_spot" (Cercospora zeae-maydis), "northern_leaf_spot" (Bipolaris zeicola) and
+"eyespot" (Kabatiella zeae, also called northern anthracnose).
 Use "not_corn_leaf" whenever the image is not a corn/maize leaf.
 Reply with JSON only, no other text, in this form:
 {{"label": "<one label>", "confidence": <number from 0 to 1>, "note": "<one short sentence describing what you see>"}}"""

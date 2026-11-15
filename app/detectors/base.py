@@ -3,9 +3,11 @@ from dataclasses import dataclass
 
 LABELS: tuple[str, ...] = (
     "healthy",
-    "common_rust",
-    "leaf_blight",  # all blights, e.g. northern corn leaf blight
-    "leaf_spot",  # all leaf spots, e.g. gray leaf spot, northern leaf spot
+    "common_rust",  # Puccinia sorghi
+    "northern_leaf_blight",  # Exserohilum turcicum
+    "gray_leaf_spot",  # Cercospora zeae-maydis
+    "northern_leaf_spot",  # Bipolaris zeicola
+    "eyespot",  # Kabatiella zeae (includes "northern anthracnose")
     "not_corn_leaf",
 )
 

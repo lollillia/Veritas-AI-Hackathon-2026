@@ -64,7 +64,7 @@ def test_labels_and_sources_come_from_folders(tmp_path):
     build(tmp_path)
     by = {Path(r["path"]).name: r for r in _manifest(tmp_path)}
     assert (by["a.png"]["source"], by["a.png"]["label"], by["a.png"]["original_folder"]) == ("kaggle", "healthy", "Healthy")
-    assert (by["b.png"]["label"], by["d.png"]["label"], by["e.png"]["label"]) == ("leaf_blight", "leaf_spot", "leaf_blight")
+    assert (by["b.png"]["label"], by["d.png"]["label"], by["e.png"]["label"]) == ("northern_leaf_blight", "gray_leaf_spot", "northern_leaf_blight")
     assert by["d.png"]["source"] == by["e.png"]["source"] == "cds"
 
 

@@ -19,11 +19,12 @@ def test_result_rejects_confidence_above_one():
         Result(label="healthy", confidence=1.5, note="x")
 
 
-def test_result_accepts_leaf_spot():
-    assert Result("leaf_spot", 0.8, "x").label == "leaf_spot"
+def test_result_accepts_a_fungal_disease_label():
+    assert Result("northern_leaf_spot", 0.8, "x").label == "northern_leaf_spot"
 
 
-def test_label_set_is_the_general_disease_names():
+def test_label_set_is_healthy_plus_each_fungal_disease():
     from app.detectors.base import LABELS
 
-    assert LABELS == ("healthy", "common_rust", "leaf_blight", "leaf_spot", "not_corn_leaf")
+    assert LABELS == ("healthy", "common_rust", "northern_leaf_blight", "gray_leaf_spot", "northern_leaf_spot",
+                      "eyespot", "not_corn_leaf")
