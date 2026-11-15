@@ -19,7 +19,7 @@ from PIL import Image
 
 from data_prep.locations import SITE_COORDS, SOURCE_SITES, reverse_city
 
-COLUMNS = ["path", "md5", "source", "capture_date", "gps_lat", "gps_lon", "camera", "site", "city"]
+COLUMNS = ["path", "md5", "source", "label", "capture_date", "gps_lat", "gps_lon", "camera", "site", "city"]
 GPS_DECIMALS = 3
 _EXIF_IFD, _GPS_IFD = 0x8769, 0x8825
 _DATETIME_ORIGINAL, _DATETIME = 0x9003, 0x0132
@@ -90,7 +90,7 @@ def write_metadata_csv(rows: list[dict], repo_root: Path, out_path: Path, resolv
             meta = read_photo_metadata(Path(repo_root) / row["path"])
             site = SOURCE_SITES.get(row["source"], "")
             city = locate_city(meta["gps_lat"], meta["gps_lon"], site, resolve_city)["city"] if resolve_city else ""
-            writer.writerow({"path": row["path"], "md5": row["md5"], "source": row["source"],
+            writer.writerow({"path": row["path"], "md5": row["md5"], "source": row["source"], "label": row.get("label", ""),
                              "capture_date": meta["capture_datetime"][:10], "gps_lat": meta["gps_lat"],
                              "gps_lon": meta["gps_lon"], "camera": meta["camera"], "site": site, "city": city})
             counts["images"] += 1

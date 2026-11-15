@@ -137,3 +137,14 @@ def test_per_folder_copies_split_the_metadata_by_raw_dataset_folder(tmp_path):
     assert [r["md5"] for r in out] == ["1", "2"] and list(out[0]) == COLUMNS
     assert (tmp_path / "data" / "raw" / "Final corn dataset" / "image_metadata.csv").is_file()
     assert not (tmp_path / "data" / "raw" / "gone").exists()
+
+
+def test_label_column_comes_from_the_manifest(tmp_path):
+    img = tmp_path / "img.jpg"
+    _jpeg_with_exif(img)
+    rows = [{"path": "img.jpg", "md5": "a", "source": "up_field", "label": "phaeosphaeria_leaf_spot"}]
+    write_metadata_csv(rows, tmp_path, tmp_path / "meta.csv")
+    with open(tmp_path / "meta.csv", newline="") as f:
+        out = list(csv.DictReader(f))
+    assert out[0]["label"] == "phaeosphaeria_leaf_spot"
+    assert COLUMNS[:4] == ["path", "md5", "source", "label"]
