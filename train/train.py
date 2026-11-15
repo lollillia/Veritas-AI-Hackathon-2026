@@ -74,6 +74,10 @@ def main() -> None:
         ignore_mismatched_sizes=True,
     )
 
+    from train.batchnorm import use_standard_batchnorm_momentum
+
+    print(f"reset momentum on {use_standard_batchnorm_momentum(model)} BatchNorm layers")
+
     def accuracy(eval_pred):
         logits, ref = eval_pred
         return {"accuracy": float((logits.argmax(-1) == ref).mean())}
