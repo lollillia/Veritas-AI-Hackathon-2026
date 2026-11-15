@@ -65,3 +65,36 @@ def test_background_augmentation_needs_a_manifest():
     import pytest as _pytest
     with _pytest.raises(SystemExit):
         parse_args(["--data", "d", "--bg-augment"])
+
+
+def test_std_augment_and_exclude_source_parse():
+    args = parse_args(["--manifest", "m.csv", "--std-augment", "--exclude-source", "up_field", "--exclude-source", "cds"])
+    assert args.std_augment is True and args.exclude_source == ["up_field", "cds"]
+    plain = parse_args(["--manifest", "m.csv"])
+    assert plain.std_augment is False and plain.exclude_source == []
+
+
+def test_exclude_source_needs_a_manifest():
+    with pytest.raises(SystemExit):
+        parse_args(["--data", "d", "--exclude-source", "cds"])
+
+
+def test_samples_from_manifest_can_leave_out_whole_sources(tmp_path):
+    for n in ("a.jpg", "b.jpg", "c.jpg", "d.jpg"):
+        (tmp_path / n).write_bytes(b"x")
+    rows = [_row("a.jpg", "train"), _row("b.jpg", "train"), _row("c.jpg", "dev"), _row("d.jpg", "dev")]
+    rows[1]["source"] = rows[3]["source"] = "up_field"
+    write_manifest(rows, tmp_path / "m.csv")
+    train, dev = samples_from_manifest(tmp_path / "m.csv", tmp_path, exclude_sources={"up_field"})
+    assert [p.name for p, _ in train] == ["a.jpg"] and [p.name for p, _ in dev] == ["c.jpg"]
+
+
+def test_background_pool_leaves_out_excluded_sources():
+    from train.train import background_pool
+    rows = [{"path": "a.jpg", "source": "cds", "split": "train"},
+            {"path": "b.jpg", "source": "up_field", "split": "train"},
+            {"path": "c.jpg", "source": "cds", "split": "dev"},
+            {"path": "d.jpg", "source": "kaggle", "split": "train"}]
+    from pathlib import Path
+    pool = background_pool(rows, Path("."), exclude_sources={"up_field"})
+    assert [p.name for p in pool] == ["a.jpg"]          # field, train split, not excluded

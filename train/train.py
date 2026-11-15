@@ -3,6 +3,7 @@
 Usage:
     python -m train.train --data <imagefolder dir> --out models/corn --epochs 3
     python -m train.train --manifest data/splits.csv --out models/corn --epochs 5
+    python -m train.train --manifest data/splits_v6.csv --bg-augment --std-augment --exclude-source up_field ...
 
 <imagefolder dir> has one sub-folder per class (e.g. PlantVillage layout). Only folders
 recognised by train.labels.folder_to_label are used; all others are ignored.
@@ -41,17 +42,25 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                         help="replace backgrounds of lab-style training photos (needs --manifest and cached masks)")
     parser.add_argument("--bg-prob", default=0.7, type=float, help="chance per training image and epoch")
     parser.add_argument("--mask-cache", default=Path("data/raw/mask_cache"), type=Path)
+    parser.add_argument("--std-augment", action="store_true",
+                        help="random crop, flips, quarter turns, colour changes and blur on training photos")
+    parser.add_argument("--exclude-source", action="append", default=[], metavar="SOURCE",
+                        help="leave a whole source out of train and dev (and the background pool), e.g. to test "
+                             "on a dataset the model never saw (repeatable; needs --manifest)")
     args = parser.parse_args(argv)
     if args.bg_augment and not args.manifest:
         parser.error("--bg-augment needs --manifest")
+    if args.exclude_source and not args.manifest:
+        parser.error("--exclude-source needs --manifest")
     return args
 
 
-def samples_from_manifest(manifest: Path, root: Path) -> tuple[list[tuple[Path, str]], list[tuple[Path, str]]]:
-    """(train samples, dev samples) from the manifest. The test split is never returned."""
+def samples_from_manifest(manifest: Path, root: Path, exclude_sources=frozenset()
+                          ) -> tuple[list[tuple[Path, str]], list[tuple[Path, str]]]:
+    """(train samples, dev samples) from the manifest, without exclude_sources. The test split is never returned."""
     from data_prep.manifest import read_manifest, samples_for_split
 
-    rows = read_manifest(manifest)
+    rows = [r for r in read_manifest(manifest) if r["source"] not in set(exclude_sources)]
     try:
         train = samples_for_split(rows, "train", root)
         dev = samples_for_split(rows, "dev", root)
@@ -63,6 +72,14 @@ def samples_from_manifest(manifest: Path, root: Path) -> tuple[list[tuple[Path, 
     return train, dev
 
 
+def background_pool(rows: list[dict], root: Path, exclude_sources=frozenset()) -> list[Path]:
+    """Training-split field photos used as background patches; excluded sources never leak in this way."""
+    from data_prep.background import FIELD_SOURCES
+
+    return [root / r["path"] for r in rows
+            if r["split"] == "train" and r["source"] in FIELD_SOURCES and r["source"] not in set(exclude_sources)]
+
+
 def main() -> None:
     args = parse_args()
 
@@ -71,7 +88,9 @@ def main() -> None:
     from transformers import AutoImageProcessor, AutoModelForImageClassification, Trainer, TrainingArguments
 
     if args.manifest:
-        train_samples, val_samples = samples_from_manifest(args.manifest, args.repo_root)
+        train_samples, val_samples = samples_from_manifest(args.manifest, args.repo_root, set(args.exclude_source))
+        if args.exclude_source:
+            print(f"left out of train and dev: {', '.join(args.exclude_source)}")
         samples = train_samples + val_samples
         print(f"manifest: {len(train_samples)} train, {len(val_samples)} dev images")
     else:
@@ -92,17 +111,23 @@ def main() -> None:
 
     augment_info, field_pool = {}, []
     if args.bg_augment:
-        from data_prep.background import FIELD_SOURCES, LAB_SOURCES, load_mask, replace_background
+        from data_prep.background import LAB_SOURCES, load_mask, replace_background
         from data_prep.manifest import read_manifest
 
-        train_rows = [r for r in read_manifest(args.manifest) if r["split"] == "train"]
-        field_pool = [args.repo_root / r["path"] for r in train_rows if r["source"] in FIELD_SOURCES]
+        all_rows = read_manifest(args.manifest)
+        field_pool = background_pool(all_rows, args.repo_root, set(args.exclude_source))
+        train_rows = [r for r in all_rows if r["split"] == "train" and r["source"] not in set(args.exclude_source)]
         for r in train_rows:
             if r["source"] in LAB_SOURCES and (args.mask_cache / f"{r['md5']}.png").is_file():
                 augment_info[str(args.repo_root / r["path"])] = r["md5"]
-        aug_rng = random.Random(0)
         print(f"background augmentation: {len(augment_info)} lab-style training images with masks, "
               f"{len(field_pool)} field photos as background patches, p={args.bg_prob}")
+
+    aug_rng = random.Random(0)
+    if args.std_augment:
+        from train.augment import standard_augment
+
+        print("standard augmentation: random crop, flips, quarter turns, colour, blur")
 
     class Ds(torch.utils.data.Dataset):
         def __init__(self, items, augment=False):
@@ -119,6 +144,8 @@ def main() -> None:
                 mask = load_mask(args.mask_cache, md5)
                 if mask is not None:
                     image = replace_background(image, mask, aug_rng, pool=field_pool)
+            if self.augment and args.std_augment:
+                image = standard_augment(image, aug_rng)
             pixel_values = processor(image, return_tensors="pt")["pixel_values"][0]
             return {"pixel_values": pixel_values, "labels": label2id[label]}
 
@@ -149,7 +176,7 @@ def main() -> None:
             remove_unused_columns=False,
             report_to=[],
         ),
-        train_dataset=Ds(train_samples, augment=args.bg_augment),
+        train_dataset=Ds(train_samples, augment=args.bg_augment or args.std_augment),
         eval_dataset=Ds(val_samples),
         compute_metrics=accuracy,
     )
