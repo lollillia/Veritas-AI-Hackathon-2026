@@ -12,6 +12,10 @@ _BARE_CLASSES = {
     "gls": "gray_leaf_spot",
     "nlb": "northern_leaf_blight",
     "nls": "northern_leaf_spot",
+    # RL-NST dataset (user-confirmed): Leaf_Blight is northern, Leaf_spot is gray.
+    # Its Streak_virus folder is deliberately not mapped, so it is never trained on.
+    "leaf_blight": "northern_leaf_blight",
+    "leaf_spot": "gray_leaf_spot",
 }
 
 

@@ -54,3 +54,19 @@ def test_cds_and_northern_leaf_spot_folders_map(folder, label):
 
 def test_northern_leaf_blight_still_maps_to_blight():
     assert folder_to_label("Corn_(maize)___Northern_Leaf_Blight") == "northern_leaf_blight"
+
+
+@pytest.mark.parametrize(
+    "folder,label",
+    [
+        ("Leaf_Blight", "northern_leaf_blight"),
+        ("Leaf_spot", "gray_leaf_spot"),
+        ("Common_rust", "common_rust"),
+    ],
+)
+def test_rlnst_folders_map(folder, label):
+    assert folder_to_label(folder) == label
+
+
+def test_streak_virus_is_never_used():
+    assert folder_to_label("Streak_virus") is None
