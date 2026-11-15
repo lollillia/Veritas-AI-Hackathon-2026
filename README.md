@@ -1,6 +1,6 @@
 # Veritas: Corn Leaf Disease Detector
 
-Upload a photo of a corn (maize) leaf and get one result: healthy, gray leaf spot, common rust, northern leaf blight, or "not a corn leaf", with a confidence and a one-line note. Built as a hackathon demo.
+Upload a photo of a corn (maize) leaf and get one result: healthy, gray leaf spot, common rust, northern leaf blight, northern leaf spot, or "not a corn leaf", with a confidence and a one-line note. Built as a hackathon demo.
 
 The website is the same whichever model runs behind it. `config.yaml` picks one of three interchangeable detectors:
 

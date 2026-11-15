@@ -6,6 +6,7 @@ LABELS: tuple[str, ...] = (
     "gray_leaf_spot",
     "common_rust",
     "northern_leaf_blight",
+    "northern_leaf_spot",
     "not_corn_leaf",
 )
 

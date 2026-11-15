@@ -139,3 +139,11 @@ def test_detector_runs_off_the_event_loop():
             raise AssertionError("detector ran on the event loop thread")
 
     assert _post(client_for(ThreadCheck()), _img()).status_code == 200
+
+
+def test_index_page_has_a_display_name_for_every_label():
+    from app.detectors.base import LABELS
+
+    html = client_for().get("/").text
+    for label in LABELS:
+        assert f"{label}:" in html, f"UI has no display name for {label}"

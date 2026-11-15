@@ -17,3 +17,7 @@ def test_result_rejects_unknown_label():
 def test_result_rejects_confidence_above_one():
     with pytest.raises(ValueError):
         Result(label="healthy", confidence=1.5, note="x")
+
+
+def test_result_accepts_northern_leaf_spot():
+    assert Result("northern_leaf_spot", 0.8, "x").label == "northern_leaf_spot"

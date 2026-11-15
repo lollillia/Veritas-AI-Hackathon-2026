@@ -36,3 +36,21 @@ def test_bare_class_folders_of_a_corn_only_dataset_map(folder, label):
 @pytest.mark.parametrize("folder", ["Tomato___healthy", "Potato___Late_blight", "Late_blight", "Rice_Brown_spot"])
 def test_other_crops_and_unknown_bare_names_are_ignored(folder):
     assert folder_to_label(folder) is None
+
+
+@pytest.mark.parametrize(
+    "folder,label",
+    [
+        ("nls", "northern_leaf_spot"),
+        ("gls", "gray_leaf_spot"),
+        ("nlb", "northern_leaf_blight"),
+        ("Northern_Leaf_Spot", "northern_leaf_spot"),
+        ("Corn_(maize)___Northern_Leaf_Spot", "northern_leaf_spot"),
+    ],
+)
+def test_cds_and_northern_leaf_spot_folders_map(folder, label):
+    assert folder_to_label(folder) == label
+
+
+def test_northern_leaf_blight_still_maps_to_blight():
+    assert folder_to_label("Corn_(maize)___Northern_Leaf_Blight") == "northern_leaf_blight"

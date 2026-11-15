@@ -7,6 +7,11 @@ _BARE_CLASSES = {
     "gray_leaf_spot": "gray_leaf_spot",
     "blight": "northern_leaf_blight",
     "northern_leaf_blight": "northern_leaf_blight",
+    "northern_leaf_spot": "northern_leaf_spot",
+    # CD&S dataset (field photos): gls / nlb / nls
+    "gls": "gray_leaf_spot",
+    "nlb": "northern_leaf_blight",
+    "nls": "northern_leaf_spot",
 }
 
 
@@ -25,7 +30,7 @@ def folder_to_label(folder_name: str) -> str | None:
     if "rust" in name:
         return "common_rust"
     if "northern" in name:
-        return "northern_leaf_blight"
+        return "northern_leaf_spot" if "spot" in name else "northern_leaf_blight"
     if "gray" in name or "grey" in name or "cercospora" in name:
         return "gray_leaf_spot"
     return None
