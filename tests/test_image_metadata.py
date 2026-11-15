@@ -71,8 +71,9 @@ def test_write_metadata_csv_one_row_per_manifest_row(tmp_path):
     with open(tmp_path / "meta.csv", newline="") as f:
         out = list(csv.DictReader(f))
     assert list(out[0]) == COLUMNS
-    assert out[0]["path"] == "img.jpg" and out[0]["capture_datetime"] == "2020-07-19T08:00:00" and out[0]["gps_lat"] == ""
-    assert counts == {"images": 1, "capture_datetime": 1, "gps": 0, "camera": 0}
+    assert out[0]["path"] == "img.jpg" and out[0]["capture_date"] == "2020-07-19" and out[0]["gps_lat"] == ""
+    assert "capture_datetime" not in out[0]
+    assert counts == {"images": 1, "capture_date": 1, "gps": 0, "camera": 0, "city": 0}
 
 
 def test_placeholder_gps_with_null_refs_and_zero_denominators_is_blank(tmp_path):
@@ -97,3 +98,24 @@ def test_site_column_comes_from_documented_dataset_locations(tmp_path):
     assert "site" in COLUMNS
     assert out[0]["site"] == SOURCE_SITES["ndisan"] and "Sampang" in out[0]["site"]
     assert out[1]["site"] == ""
+
+
+def test_city_comes_from_photo_gps_otherwise_from_the_site(tmp_path):
+    from data_prep.image_metadata import SOURCE_SITES
+
+    gps_img, plain = tmp_path / "gps.jpg", tmp_path / "plain.jpg"
+    _jpeg_with_exif(gps_img, when="2020:08:16 10:00:00", gps={1: "N", 2: (40.0, 28.0, 22.8), 3: "W", 4: (86.0, 59.0, 34.8)})
+    _jpeg_with_exif(plain, when="2023:07:28 17:14:48")
+    def resolve(lat, lon):
+        return {"city": f"City at {lat},{lon}", "city_lat": round(lat, 1), "city_lon": round(lon, 1)}
+    rows = [{"path": "gps.jpg", "md5": "a", "source": "cds"}, {"path": "plain.jpg", "md5": "b", "source": "ndisan"},
+            {"path": "plain.jpg", "md5": "c", "source": "rlnst"}]
+    write_metadata_csv(rows, tmp_path, tmp_path / "meta.csv", resolve_city=resolve)
+    with open(tmp_path / "meta.csv", newline="") as f:
+        out = list(csv.DictReader(f))
+    assert out[0]["city"] == "City at 40.473,-86.993"
+    assert out[1]["city"] == "City at -7.205,113.247" and out[1]["site"] == SOURCE_SITES["ndisan"]
+    assert out[2]["city"] == "" and out[2]["site"] == ""
+    assert out[0]["capture_date"] == "2020-08-16" and out[1]["capture_date"] == "2023-07-28"
+    assert COLUMNS[-2:] == ["site", "city"]
+    assert not {"capture_datetime", "city_lat", "city_lon", "city_basis", "site_lat", "site_lon", "site_basis"} & set(COLUMNS)

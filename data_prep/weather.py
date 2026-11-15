@@ -1,91 +1,122 @@
-"""Historical weather at each distinct (GPS location, capture time) in image_metadata.csv.
+"""Weather leading up to each photo: summaries for the last 7 days, 1 month, 3 months and 6 months.
 
     python -m data_prep.weather [--metadata data/image_metadata.csv] [--out data/weather.csv]
 
-Source: Open-Meteo historical weather archive (ERA5 reanalysis, hourly, roughly 10-25 km grid),
-https://open-meteo.com. One request per location and day; the hour nearest the capture time is
-used. Capture times come from EXIF and carry no time zone, so they are treated as local time at
-the site ("timezone=auto"). Raw responses are cached in data/raw/weather_cache/ (not committed).
+One row per distinct (city, capture date) in image_metadata.csv. The city comes from the photo's
+GPS or, failing that, its documented dataset site (see data_prep.locations); weather is queried at
+the city's centre point. Each window covers the N days ending the day before the capture date, so
+the capture day itself is not included. Source: Open-Meteo historical weather archive (ERA5
+reanalysis, daily values on a roughly 10-25 km grid), https://open-meteo.com; one request per city
+covering all its windows, cached in data/raw/weather_cache/.
+
+Join back to image_metadata.csv on city and capture_date.
 """
 import argparse
 import csv
 import json
 import urllib.parse
 import urllib.request
-from datetime import datetime, timedelta
+from datetime import date, timedelta
 from pathlib import Path
 
 API = "https://archive-api.open-meteo.com/v1/archive"
-HOURLY = ["temperature_2m", "relative_humidity_2m", "dew_point_2m", "precipitation",
-          "cloud_cover", "wind_speed_10m", "weather_code"]
-_OUT_NAMES = {
-    "temperature_2m": "temperature_2m_c", "relative_humidity_2m": "relative_humidity_2m_pct",
-    "dew_point_2m": "dew_point_2m_c", "precipitation": "precipitation_mm",
-    "cloud_cover": "cloud_cover_pct", "wind_speed_10m": "wind_speed_10m_kmh", "weather_code": "weather_code",
-}
-COLUMNS = (["gps_lat", "gps_lon", "capture_datetime", "weather_hour_local", "timezone"]
-           + [_OUT_NAMES[v] for v in HOURLY] + ["grid_lat", "grid_lon", "source", "note"])
+DAILY = ["temperature_2m_mean", "temperature_2m_max", "temperature_2m_min", "precipitation_sum",
+         "relative_humidity_2m_mean"]
+WINDOWS = {"7d": 7, "1m": 30, "3m": 90, "6m": 182}
+RAINY_DAY_MM = 1.0
+STATS = ["temp_mean_c", "temp_min_c", "temp_max_c", "precip_mm", "rainy_days", "rh_mean_pct", "days"]
+COLUMNS = (["city", "city_lat", "city_lon", "capture_date", "timezone"]
+           + [f"{w}_{s}" for w in WINDOWS for s in STATS] + ["source", "note"])
 SOURCE = "Open-Meteo historical archive (ERA5 reanalysis)"
 
 
-def weather_keys(rows: list[dict]) -> list[tuple[float, float, str]]:
-    """Distinct (lat, lon, capture_datetime) from metadata rows that have all three, sorted."""
-    keys = {(float(r["gps_lat"]), float(r["gps_lon"]), r["capture_datetime"])
-            for r in rows if r.get("gps_lat") and r.get("gps_lon") and r.get("capture_datetime")}
-    return sorted(keys)
+def weather_keys(rows: list[dict], locate) -> list[dict]:
+    """Distinct (city, capture date) from metadata rows, sorted.
+
+    locate(row) -> {"city", "city_lat", "city_lon"} (or None) gives the point to query for a row's city.
+    """
+    keys = {}
+    for r in rows:
+        if not (r.get("city") and r.get("capture_date")):
+            continue
+        k = (r["city"], r["capture_date"])
+        if k not in keys:
+            loc = locate(r)
+            if loc and loc.get("city_lat") not in (None, ""):
+                keys[k] = {"city": k[0], "capture_date": k[1],
+                           "city_lat": float(loc["city_lat"]), "city_lon": float(loc["city_lon"])}
+    return [keys[k] for k in sorted(keys)]
 
 
-def nearest_hour(capture_datetime: str) -> str:
-    t = datetime.fromisoformat(capture_datetime)
-    t = (t + timedelta(minutes=30)).replace(minute=0, second=0, microsecond=0)
-    return t.strftime("%Y-%m-%dT%H:00")
+def _r(x: float) -> float:
+    return round(x, 1)
 
 
-def fetch_day(lat: float, lon: float, date: str, cache_dir: Path) -> dict:
-    """Hourly weather for one location and day (local time), cached on disk."""
-    cache = Path(cache_dir) / f"{lat:.3f}_{lon:.3f}_{date}.json"
+def summarise(daily: dict, capture_date: str, n_days: int) -> dict:
+    """Stats over the n_days ending the day before capture_date; "days" counts days with data."""
+    end = date.fromisoformat(capture_date) - timedelta(days=1)
+    start = end - timedelta(days=n_days - 1)
+    idx = [i for i, t in enumerate(daily.get("time", [])) if start <= date.fromisoformat(t) <= end]
+    def vals(name):
+        series = daily.get(name, [])
+        return [series[i] for i in idx if i < len(series) and series[i] is not None]
+    mean, tmax, tmin = vals("temperature_2m_mean"), vals("temperature_2m_max"), vals("temperature_2m_min")
+    rain, rh = vals("precipitation_sum"), vals("relative_humidity_2m_mean")
+    return {
+        "temp_mean_c": _r(sum(mean) / len(mean)) if mean else "",
+        "temp_min_c": _r(min(tmin)) if tmin else "",
+        "temp_max_c": _r(max(tmax)) if tmax else "",
+        "precip_mm": _r(sum(rain)) if rain else "",
+        "rainy_days": sum(x >= RAINY_DAY_MM for x in rain) if rain else "",
+        "rh_mean_pct": _r(sum(rh) / len(rh)) if rh else "",
+        "days": len(mean),
+    }
+
+
+def fetch_range(lat: float, lon: float, start: str, end: str, cache_dir: Path) -> dict:
+    """Daily weather for one location and date range (local time), cached on disk."""
+    cache = Path(cache_dir) / f"daily_{lat:.3f}_{lon:.3f}_{start}_{end}.json"
     if cache.is_file():
         return json.loads(cache.read_text())
-    query = urllib.parse.urlencode({"latitude": f"{lat:.3f}", "longitude": f"{lon:.3f}", "start_date": date,
-                                    "end_date": date, "hourly": ",".join(HOURLY), "timezone": "auto"})
+    query = urllib.parse.urlencode({"latitude": f"{lat:.3f}", "longitude": f"{lon:.3f}", "start_date": start,
+                                    "end_date": end, "daily": ",".join(DAILY), "timezone": "auto"})
     req = urllib.request.Request(f"{API}?{query}", headers={"User-Agent": "dataset-weather-lookup"})
-    with urllib.request.urlopen(req, timeout=60) as resp:
+    with urllib.request.urlopen(req, timeout=120) as resp:
         data = json.load(resp)
     cache.parent.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(data))
     return data
 
 
-def weather_rows(keys: list[tuple[float, float, str]], fetch) -> list[dict]:
-    """One output row per key; fetch(lat, lon, date) is called once per location and day."""
-    days: dict = {}
+def weather_rows(keys: list[dict], fetch) -> list[dict]:
+    """fetch(lat, lon, start, end) is called once per city, covering every window of every date."""
+    longest = max(WINDOWS.values())
+    by_city: dict = {}
+    for k in keys:
+        by_city.setdefault((k["city"], k["city_lat"], k["city_lon"]), []).append(k["capture_date"])
+    fetched = {}
+    for (city, lat, lon), dates in by_city.items():
+        start = (date.fromisoformat(min(dates)) - timedelta(days=longest)).isoformat()
+        end = (date.fromisoformat(max(dates)) - timedelta(days=1)).isoformat()
+        try:
+            fetched[city] = (fetch(lat, lon, start, end), "")
+        except Exception as exc:                           # network or API error: keep rows, blank weather
+            fetched[city] = (None, f"fetch failed: {exc}")
     out = []
-    for lat, lon, captured in keys:
-        hour = nearest_hour(captured)
-        day_key = (lat, lon, hour[:10])
-        if day_key not in days:
-            try:
-                days[day_key] = (fetch(*day_key), "")
-            except Exception as exc:                       # network or API error: keep the row, blank weather
-                days[day_key] = (None, f"fetch failed: {exc}")
-        data, error = days[day_key]
+    for k in keys:
+        data, error = fetched[k["city"]]
         row = {c: "" for c in COLUMNS}
-        row.update({"gps_lat": lat, "gps_lon": lon, "capture_datetime": captured, "weather_hour_local": hour,
-                    "source": SOURCE})
-        if data is None:
-            row["note"] = error
-        else:
-            row.update({"timezone": data.get("timezone", ""), "grid_lat": data.get("latitude", ""),
-                        "grid_lon": data.get("longitude", "")})
-            hourly = data.get("hourly", {})
-            times = hourly.get("time", [])
-            if hour in times:
-                i = times.index(hour)
-                for var in HOURLY:
-                    values = hourly.get(var, [])
-                    row[_OUT_NAMES[var]] = values[i] if i < len(values) and values[i] is not None else ""
-            else:
-                row["note"] = "hour not in response"
+        row.update({"city": k["city"], "city_lat": k["city_lat"], "city_lon": k["city_lon"],
+                    "capture_date": k["capture_date"], "source": SOURCE, "note": error})
+        if data is not None:
+            row["timezone"] = data.get("timezone", "")
+            short = []
+            for w, n in WINDOWS.items():
+                stats = summarise(data.get("daily", {}), k["capture_date"], n)
+                row.update({f"{w}_{s}": v for s, v in stats.items()})
+                if stats["days"] < n:
+                    short.append(f"{w} has {stats['days']}/{n} days")
+            row["note"] = "; ".join(short)
         out.append(row)
     return out
 
@@ -96,15 +127,22 @@ def main() -> None:
     parser.add_argument("--out", default=Path("data/weather.csv"), type=Path)
     parser.add_argument("--cache", default=Path("data/raw/weather_cache"), type=Path)
     args = parser.parse_args()
+    from data_prep.image_metadata import locate_city
+    from data_prep.locations import reverse_city
+
+    geocode_cache = Path("data/raw/geocode_cache")
+    resolve = lambda lat, lon: reverse_city(lat, lon, geocode_cache)        # cached by image_metadata
     with open(args.metadata, newline="") as f:
-        keys = weather_keys(list(csv.DictReader(f)))
-    rows = weather_rows(keys, lambda lat, lon, date: fetch_day(lat, lon, date, args.cache))
+        keys = weather_keys(list(csv.DictReader(f)),
+                            lambda r: locate_city(r["gps_lat"], r["gps_lon"], r["site"], resolve))
+    rows = weather_rows(keys, lambda lat, lon, s, e: fetch_range(lat, lon, s, e, args.cache))
     with open(args.out, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=COLUMNS, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
-    filled = sum(r["temperature_2m_c"] != "" for r in rows)
-    print(f"wrote {args.out}: {len(rows)} rows, {filled} with weather, {len(rows) - filled} blank")
+    complete = sum(r["note"] == "" for r in rows)
+    print(f"wrote {args.out}: {len(rows)} city-date rows, {len({r['city'] for r in rows})} cities, "
+          f"{complete} complete, {len(rows) - complete} with notes")
 
 
 if __name__ == "__main__":

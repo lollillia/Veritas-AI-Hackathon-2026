@@ -1,10 +1,10 @@
 """Capture date, GPS location and camera for every image in a manifest, where the photo has them.
 
-    python -m data_prep.image_metadata [--manifest data/splits_v2.csv] [--out data/image_metadata.csv]
+    python -m data_prep.image_metadata [--manifest data/splits_v3.csv] [--out data/image_metadata.csv]
 
-Values come from the images' embedded EXIF data; "site" is the dataset-level location where the
-source documents one. Blank cells mean the image carries no such data
-(most datasets strip it). GPS is rounded to 3 decimals (about 110 m) so exact farm locations are
+Values come from the images' embedded EXIF data (capture time reduced to its date); "site" is the
+dataset-level location where the source documents one; "city" is looked up from the photo's GPS, or
+else from the site's coordinates. Blank cells mean unknown (most datasets strip EXIF). GPS is rounded to 3 decimals (about 110 m) so exact farm locations are
 not published with the repository.
 """
 import argparse
@@ -15,12 +15,9 @@ from pathlib import Path
 
 from PIL import Image
 
-COLUMNS = ["path", "md5", "source", "capture_datetime", "gps_lat", "gps_lon", "camera", "site"]
-# Dataset-level collection site, where the source documents one (not from the photo itself unless stated).
-SOURCE_SITES = {
-    "cds": "near West Lafayette, Indiana, USA (from photo GPS)",
-    "ndisan": "Polagan Village, Sampang Regency, Madura, East Java, Indonesia (dataset page)",
-}
+from data_prep.locations import SITE_COORDS, SOURCE_SITES, reverse_city
+
+COLUMNS = ["path", "md5", "source", "capture_date", "gps_lat", "gps_lon", "camera", "site", "city"]
 GPS_DECIMALS = 3
 _EXIF_IFD, _GPS_IFD = 0x8769, 0x8825
 _DATETIME_ORIGINAL, _DATETIME = 0x9003, 0x0132
@@ -65,9 +62,23 @@ def read_photo_metadata(path: Path | str) -> dict:
     return out
 
 
-def write_metadata_csv(rows: list[dict], repo_root: Path, out_path: Path) -> dict:
-    """One output row per manifest row; returns how many rows have each kind of value."""
-    counts = {"images": 0, "capture_datetime": 0, "gps": 0, "camera": 0}
+def locate_city(gps_lat, gps_lon, site: str, resolve_city) -> dict:
+    """{"city", "city_lat", "city_lon"} from the photo's GPS, else from the documented site; blanks if neither."""
+    if gps_lat != "" and gps_lon != "":
+        return resolve_city(float(gps_lat), float(gps_lon))
+    if site in SITE_COORDS:
+        return resolve_city(*SITE_COORDS[site])
+    return {"city": "", "city_lat": "", "city_lon": ""}
+
+
+def write_metadata_csv(rows: list[dict], repo_root: Path, out_path: Path, resolve_city=None) -> dict:
+    """One output row per manifest row; returns how many rows have each kind of value.
+
+    resolve_city(lat, lon) -> {"city", ...} turns the photo's GPS, or else its documented site's
+    coordinates, into a city; without it the city column stays blank. Capture times are reduced to
+    their date.
+    """
+    counts = {"images": 0, "capture_date": 0, "gps": 0, "camera": 0, "city": 0}
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w", newline="") as f:
@@ -75,12 +86,16 @@ def write_metadata_csv(rows: list[dict], repo_root: Path, out_path: Path) -> dic
         writer.writeheader()
         for row in rows:
             meta = read_photo_metadata(Path(repo_root) / row["path"])
-            writer.writerow({"path": row["path"], "md5": row["md5"], "source": row["source"], **meta,
-                             "site": SOURCE_SITES.get(row["source"], "")})
+            site = SOURCE_SITES.get(row["source"], "")
+            city = locate_city(meta["gps_lat"], meta["gps_lon"], site, resolve_city)["city"] if resolve_city else ""
+            writer.writerow({"path": row["path"], "md5": row["md5"], "source": row["source"],
+                             "capture_date": meta["capture_datetime"][:10], "gps_lat": meta["gps_lat"],
+                             "gps_lon": meta["gps_lon"], "camera": meta["camera"], "site": site, "city": city})
             counts["images"] += 1
-            counts["capture_datetime"] += bool(meta["capture_datetime"])
+            counts["capture_date"] += bool(meta["capture_datetime"])
             counts["gps"] += meta["gps_lat"] != ""
             counts["camera"] += bool(meta["camera"])
+            counts["city"] += bool(city)
     return counts
 
 
@@ -88,10 +103,12 @@ def main() -> None:
     from data_prep.manifest import read_manifest
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--manifest", default=Path("data/splits_v2.csv"), type=Path)
+    parser.add_argument("--manifest", default=Path("data/splits_v3.csv"), type=Path)
     parser.add_argument("--out", default=Path("data/image_metadata.csv"), type=Path)
     args = parser.parse_args()
-    counts = write_metadata_csv(read_manifest(args.manifest), Path.cwd(), args.out)
+    cache = Path("data/raw/geocode_cache")
+    counts = write_metadata_csv(read_manifest(args.manifest), Path.cwd(), args.out,
+                                resolve_city=lambda lat, lon: reverse_city(lat, lon, cache))
     print(f"wrote {args.out}: {counts}")
 
 

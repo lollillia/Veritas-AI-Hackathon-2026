@@ -19,11 +19,14 @@ about 560 images between splits. The builder refuses to overwrite an existing fi
 
 ## Photo metadata
 
-`data/image_metadata.csv` lists, for every image in the newest manifest, the capture date and time, GPS
-location (rounded to 3 decimals, about 110 m) and camera taken from the image's embedded EXIF data, plus a
-`site` column with the dataset-level collection site where the source documents one. Blank means unknown.
-It now covers every image in `data/splits_v3.csv`. Regenerate with
-`python -m data_prep.image_metadata --manifest data/splits_v3.csv`.
+`data/image_metadata.csv` lists, for every image in the newest manifest (`data/splits_v3.csv`):
+`capture_date` (EXIF capture time reduced to its date), `gps_lat` / `gps_lon` (rounded to 3 decimals,
+about 110 m), `camera`, `site` (the dataset-level collection site where the source documents one) and
+`city`. The city is reverse-geocoded from the photo's GPS with OpenStreetMap Nominatim at city level,
+or, when the photo has no GPS, from the documented site's coordinates. Rural points can resolve to a
+county instead of a town (CD&S: 1,412 photos "West Lafayette", 159 "Tippecanoe County" for the same
+field). Blank means unknown. Regenerate with `python -m data_prep.image_metadata` (lookups cached in
+`data/raw/geocode_cache/`).
 
 | Source | Images | With capture date | With GPS | Notes |
 |---|---|---|---|---|
