@@ -7,3 +7,4 @@ __pycache__/
 .pytest_cache/
 data/*
 !data/splits*.csv
+!data/image_metadata.csv
