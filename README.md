@@ -84,3 +84,7 @@ pytest
 2. Drop in a diseased leaf. Show the label, confidence bar and note.
 3. Drop in a photo that is not a corn leaf. Show it says so instead of guessing.
 4. Open `config.yaml`, change `detector:`, restart, and run the same photo. "The website never changes; the model behind it is a plug-in."
+
+## Resources
+
+Related work (papers, code) and the external services the data pipeline uses are listed in [`docs/resources.md`](docs/resources.md).
