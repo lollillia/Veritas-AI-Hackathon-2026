@@ -16,7 +16,11 @@ LAB_SOURCES = {"kaggle", "rlnst", "ndisan"}             # plain-background photo
 FIELD_SOURCES = {"up_field", "cds", "mendeley_bd", "neau"}  # field photos used as background patches
 WORK_SIZE = 160          # masks are computed on a thumbnail this size
 BORDER = 4               # border strip (pixels) used to estimate the background colour
-MIN_PLAIN_BORDER = 0.6   # share of border pixels that must match the background colour
+MIN_PLAIN_BORDER = 0.15  # share of border pixels that must be plain background (grey, black, white)
+MAX_BG_SATURATION = 0.25 # plain backgrounds are unsaturated; leaves are not
+MIN_SATURATION_GAP = 0.08
+MAX_BG_TEXTURE = 12.0
+MAX_FRAGMENTATION = 9.0  # leaf/background edge length per sqrt(background area); speckled masks score >12    # backdrops and paper are smooth; leaf tissue and lesions are textured
 MIN_COVER, MAX_COVER = 0.08, 0.97
 
 
@@ -27,6 +31,25 @@ def _otsu(values: np.ndarray) -> float:
     m0 = np.cumsum(hist * centres) / np.maximum(w0, 1)
     m1 = (np.sum(hist * centres) - np.cumsum(hist * centres)) / np.maximum(w1, 1)
     return float(centres[np.argmax(w0 * w1 * (m0 - m1) ** 2)])
+
+
+def _local_texture(a: np.ndarray) -> np.ndarray:
+    """Largest neighbour-to-neighbour grey-level step in each pixel's 3x3 neighbourhood."""
+    g = a.mean(axis=2)
+    step = np.zeros_like(g)
+    step[:, 1:] = np.maximum(step[:, 1:], np.abs(np.diff(g, axis=1)))
+    step[1:, :] = np.maximum(step[1:, :], np.abs(np.diff(g, axis=0)))
+    out = step.copy()
+    out[1:] = np.maximum(out[1:], step[:-1]); out[:-1] = np.maximum(out[:-1], step[1:])
+    tmp = out.copy()
+    out[:, 1:] = np.maximum(out[:, 1:], tmp[:, :-1]); out[:, :-1] = np.maximum(out[:, :-1], tmp[:, 1:])
+    return out
+
+
+def fragmentation(mask: np.ndarray) -> float:
+    """Leaf/background boundary length divided by sqrt(background area): low for clean masks."""
+    edge = (mask[1:, :] != mask[:-1, :]).sum() + (mask[:, 1:] != mask[:, :-1]).sum()
+    return float(edge / max(np.sqrt((~mask).sum()), 1.0))
 
 
 def _shift_or(m: np.ndarray) -> np.ndarray:
@@ -44,13 +67,19 @@ def leaf_mask(img: Image.Image) -> np.ndarray | None:
     small = img.convert("RGB")
     small.thumbnail((WORK_SIZE, WORK_SIZE))
     a = np.asarray(small, dtype=np.float32)
-    border = np.concatenate([a[:BORDER].reshape(-1, 3), a[-BORDER:].reshape(-1, 3),
-                             a[:, :BORDER].reshape(-1, 3), a[:, -BORDER:].reshape(-1, 3)])
-    bg = np.median(border, axis=0)
-    if (np.linalg.norm(border - bg, axis=1) < 30).mean() < MIN_PLAIN_BORDER:
-        return None                                        # cluttered border: not a lab-style photo
+    hsv = np.asarray(small.convert("HSV"), dtype=np.float32) / 255.0
+    plain = (hsv[..., 1] < MAX_BG_SATURATION) | (hsv[..., 2] < 0.15)       # grey, white, or black
+    edge = np.zeros(plain.shape, dtype=bool)
+    edge[:BORDER] = edge[-BORDER:] = True
+    edge[:, :BORDER] = edge[:, -BORDER:] = True
+    border_plain = a[edge & plain]
+    if len(border_plain) < MIN_PLAIN_BORDER * edge.sum():
+        return None                                        # no plain background along the border
+    bg = np.median(border_plain, axis=0)                   # estimated from plain pixels only, never the leaf
+    if (np.linalg.norm(border_plain - bg, axis=1) < 30).mean() < 0.6:
+        return None                                        # plain pixels of several colours: cluttered
     dist = np.linalg.norm(a - bg, axis=2)
-    bg_like = dist < min(max(_otsu(dist), 20.0), 90.0)
+    bg_like = (dist < min(max(_otsu(dist), 20.0), 90.0)) & (_local_texture(a) < MAX_BG_TEXTURE)
     background = np.zeros_like(bg_like)
     background[0, :] = background[-1, :] = background[:, 0] = background[:, -1] = True
     background &= bg_like
@@ -61,8 +90,14 @@ def leaf_mask(img: Image.Image) -> np.ndarray | None:
         background = grown
     leaf = ~background
     leaf = _shift_or(~_shift_or(~leaf))                    # opening: drop single-pixel specks
+    if fragmentation(leaf) > MAX_FRAGMENTATION:
+        return None                                        # speckled: background only partly found
+    for _ in range(2):                                     # shrink 2 px: the texture test stops the background
+        leaf &= ~_shift_or(~leaf)                          # 1-2 px short of the leaf, leaving a backdrop rim
     if not MIN_COVER <= leaf.mean() <= MAX_COVER:
         return None
+    if hsv[..., 1][leaf].mean() < hsv[..., 1][~leaf].mean() + MIN_SATURATION_GAP:
+        return None                                        # "leaf" no more colourful than background: failed
     return leaf
 
 
