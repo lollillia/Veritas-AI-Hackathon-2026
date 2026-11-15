@@ -148,3 +148,60 @@ def test_label_column_comes_from_the_manifest(tmp_path):
         out = list(csv.DictReader(f))
     assert out[0]["label"] == "phaeosphaeria_leaf_spot"
     assert COLUMNS[:4] == ["path", "md5", "source", "label"]
+
+
+def _folder_csv(root, folder, rows):
+    d = root / "data" / "raw" / folder
+    d.mkdir(parents=True, exist_ok=True)
+    with open(d / "image_metadata.csv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=COLUMNS); w.writeheader()
+        for r in rows:
+            w.writerow({c: "" for c in COLUMNS} | r)
+
+
+def test_index_links_each_folder_file_with_counts(tmp_path):
+    import json
+
+    from data_prep.image_metadata import write_index
+
+    _folder_csv(tmp_path, "cds", [{"path": "data/raw/cds/a.jpg", "source": "cds"}, {"path": "data/raw/cds/b.jpg", "source": "cds"}])
+    _folder_csv(tmp_path, "Final corn dataset", [{"path": "data/raw/Final corn dataset/c.jpg", "source": "mendeley_bd"}])
+    write_index(tmp_path, {"cds": 2, "Final corn dataset": 1}, tmp_path / "data" / "image_metadata.json", "data/splits_v5.csv")
+    idx = json.loads((tmp_path / "data" / "image_metadata.json").read_text())
+    assert idx["manifest"] == "data/splits_v5.csv" and idx["columns"] == COLUMNS and idx["total_images"] == 3
+    by = {d["folder"]: d for d in idx["datasets"]}
+    assert by["cds"] == {"folder": "cds", "source": "cds", "images": 2, "metadata": "raw/cds/image_metadata.csv"}
+    assert by["Final corn dataset"]["source"] == "mendeley_bd"
+
+
+def test_read_metadata_follows_the_index(tmp_path):
+    from data_prep.image_metadata import read_metadata, write_index
+
+    _folder_csv(tmp_path, "cds", [{"path": "data/raw/cds/a.jpg", "md5": "1", "source": "cds"}])
+    _folder_csv(tmp_path, "rlnst", [{"path": "data/raw/rlnst/b.jpg", "md5": "2", "source": "rlnst"}])
+    index = tmp_path / "data" / "image_metadata.json"
+    write_index(tmp_path, {"cds": 1, "rlnst": 1}, index, "m.csv")
+    assert sorted(r["md5"] for r in read_metadata(index)) == ["1", "2"]
+
+
+def test_read_metadata_names_a_missing_linked_file(tmp_path):
+    import pytest as _pytest
+
+    from data_prep.image_metadata import read_metadata, write_index
+
+    _folder_csv(tmp_path, "cds", [{"path": "data/raw/cds/a.jpg", "source": "cds"}])
+    index = tmp_path / "data" / "image_metadata.json"
+    write_index(tmp_path, {"cds": 1}, index, "m.csv")
+    (tmp_path / "data" / "raw" / "cds" / "image_metadata.csv").unlink()
+    with _pytest.raises(FileNotFoundError, match="raw/cds/image_metadata.csv"):
+        read_metadata(index)
+
+
+def test_index_works_with_a_relative_index_path(tmp_path, monkeypatch):
+    from data_prep.image_metadata import read_metadata, write_index
+
+    _folder_csv(tmp_path, "cds", [{"path": "data/raw/cds/a.jpg", "md5": "1", "source": "cds"}])
+    monkeypatch.chdir(tmp_path)
+    idx = write_index(Path.cwd(), {"cds": 1}, Path("data/image_metadata.json"), "m.csv")
+    assert idx["datasets"][0]["metadata"] == "raw/cds/image_metadata.csv"
+    assert [r["md5"] for r in read_metadata(Path("data/image_metadata.json"))] == ["1"]

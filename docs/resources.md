@@ -17,5 +17,5 @@ Papers, code and services this project builds on or compares against. Datasets t
 | Service | Used for | Notes |
 |---|---|---|
 | [Open-Meteo historical weather archive](https://open-meteo.com) (ERA5 reanalysis) | `data/weather.csv` | free, no key; modelled values on a ~10–25 km grid |
-| [OpenStreetMap Nominatim](https://nominatim.openstreetmap.org) | city names in `data/image_metadata.csv`, site coordinates | at most one request per second; only rounded coordinates or place names are sent |
+| [OpenStreetMap Nominatim](https://nominatim.openstreetmap.org) | city names in the image metadata (`data/image_metadata.json`), site coordinates | at most one request per second; only rounded coordinates or place names are sent |
 | [Kaggle CLI](https://github.com/Kaggle/kaggle-api) | downloading Kaggle datasets | needs `KAGGLE_API_TOKEN` (in `.env`, gitignored) |

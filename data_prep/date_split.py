@@ -34,12 +34,13 @@ def split_by_date(rows: list[dict], meta_by_md5: dict, seed: int = 0) -> list[st
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", default=Path("data/splits_v3.csv"), type=Path)
-    parser.add_argument("--metadata", default=Path("data/image_metadata.csv"), type=Path)
+    parser.add_argument("--metadata", default=Path("data/image_metadata.json"), type=Path)
     parser.add_argument("--out", default=Path("data/splits_v3_by_date.csv"), type=Path)
     args = parser.parse_args()
     rows = read_manifest(args.manifest)
-    with open(args.metadata, newline="") as f:
-        meta = {m["md5"]: (m["city"], m["capture_date"]) for m in csv.DictReader(f) if m["city"] and m["capture_date"]}
+    from data_prep.image_metadata import read_metadata
+
+    meta = {m["md5"]: (m["city"], m["capture_date"]) for m in read_metadata(args.metadata) if m["city"] and m["capture_date"]}
     new = split_by_date(rows, meta)
     moved = sum(r["split"] != s for r, s in zip(rows, new))
     for r, s in zip(rows, new):

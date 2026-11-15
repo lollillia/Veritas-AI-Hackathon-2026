@@ -1,8 +1,9 @@
 """Capture date, GPS location and camera for every image in a manifest, where the photo has them.
 
-    python -m data_prep.image_metadata [--manifest data/splits_v5.csv] [--out data/image_metadata.csv]
+    python -m data_prep.image_metadata [--manifest data/splits_v5.csv] [--index data/image_metadata.json]
 
-Also writes each dataset folder's rows to data/raw/<folder>/image_metadata.csv.
+Writes each dataset folder's rows to data/raw/<folder>/image_metadata.csv and a JSON index
+(data/image_metadata.json) that links them; read everything with read_metadata().
 
 Values come from the images' embedded EXIF data (capture time reduced to its date); "site" is the
 dataset-level location where the source documents one; "city" is looked up from the photo's GPS, or
@@ -12,6 +13,7 @@ not published with the repository.
 import argparse
 import csv
 import math
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
@@ -117,20 +119,62 @@ def write_per_folder(rows: list[dict], raw_root: Path) -> dict[str, int]:
     return {k: len(v) for k, v in by_folder.items()}
 
 
+def write_index(repo_root: Path, per_folder: dict[str, int], index_path: Path, manifest: str) -> dict:
+    """JSON index linking each dataset folder's image_metadata.csv (paths relative to the index)."""
+    import json
+
+    index_path = Path(index_path)
+    datasets = []
+    for folder in sorted(per_folder):
+        csv_path = Path(repo_root) / "data" / "raw" / folder / "image_metadata.csv"
+        with open(csv_path, newline="") as f:
+            sources = Counter(r["source"] for r in csv.DictReader(f))
+        datasets.append({"folder": folder, "source": sources.most_common(1)[0][0] if sources else "",
+                         "images": per_folder[folder],
+                         "metadata": csv_path.resolve().relative_to(index_path.resolve().parent).as_posix()})
+    index = {
+        "description": "Per-image metadata (label, capture date, GPS rounded to ~110 m, camera, documented site, "
+                       "city), one CSV per dataset folder. Read all rows with data_prep.image_metadata.read_metadata.",
+        "manifest": manifest, "columns": COLUMNS, "total_images": sum(per_folder.values()), "datasets": datasets,
+    }
+    index_path.write_text(json.dumps(index, indent=2) + "\n")
+    return index
+
+
+def read_metadata(index_path: Path = Path("data/image_metadata.json")) -> list[dict]:
+    """All metadata rows, read from the per-folder files the index links to."""
+    import json
+
+    index_path = Path(index_path)
+    rows = []
+    for d in json.loads(index_path.read_text())["datasets"]:
+        p = index_path.parent / d["metadata"]
+        if not p.is_file():
+            raise FileNotFoundError(f"metadata file missing: {d['metadata']}")
+        with open(p, newline="") as f:
+            rows += list(csv.DictReader(f))
+    return rows
+
+
 def main() -> None:
+    import tempfile
+
     from data_prep.manifest import read_manifest
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", default=Path("data/splits_v5.csv"), type=Path)
-    parser.add_argument("--out", default=Path("data/image_metadata.csv"), type=Path)
+    parser.add_argument("--index", default=Path("data/image_metadata.json"), type=Path)
     args = parser.parse_args()
     cache = Path("data/raw/geocode_cache")
-    counts = write_metadata_csv(read_manifest(args.manifest), Path.cwd(), args.out,
-                                resolve_city=lambda lat, lon: reverse_city(lat, lon, cache))
-    print(f"wrote {args.out}: {counts}")
-    with open(args.out, newline="") as f:
-        per_folder = write_per_folder(list(csv.DictReader(f)), Path("data/raw"))
-    print(f"wrote image_metadata.csv into {len(per_folder)} dataset folders: {per_folder}")
+    with tempfile.TemporaryDirectory() as tmp:
+        all_rows = Path(tmp) / "all.csv"
+        counts = write_metadata_csv(read_manifest(args.manifest), Path.cwd(), all_rows,
+                                    resolve_city=lambda lat, lon: reverse_city(lat, lon, cache))
+        with open(all_rows, newline="") as f:
+            per_folder = write_per_folder(list(csv.DictReader(f)), Path("data/raw"))
+    write_index(Path.cwd(), per_folder, args.index, args.manifest.as_posix())
+    print(f"metadata: {counts}")
+    print(f"wrote image_metadata.csv into {len(per_folder)} dataset folders and the index {args.index}")
 
 
 if __name__ == "__main__":

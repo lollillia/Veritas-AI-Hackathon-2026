@@ -1,0 +1,67 @@
+{
+  "description": "Per-image metadata (label, capture date, GPS rounded to ~110 m, camera, documented site, city), one CSV per dataset folder. Read all rows with data_prep.image_metadata.read_metadata.",
+  "manifest": "data/splits_v5.csv",
+  "columns": [
+    "path",
+    "md5",
+    "source",
+    "label",
+    "capture_date",
+    "gps_lat",
+    "gps_lon",
+    "camera",
+    "site",
+    "city"
+  ],
+  "total_images": 16460,
+  "datasets": [
+    {
+      "folder": "20237613",
+      "source": "up_field",
+      "images": 1243,
+      "metadata": "raw/20237613/image_metadata.csv"
+    },
+    {
+      "folder": "An Open-Source Multi-Format Maize Leaf Image Datas",
+      "source": "maize_multiformat",
+      "images": 664,
+      "metadata": "raw/An Open-Source Multi-Format Maize Leaf Image Datas/image_metadata.csv"
+    },
+    {
+      "folder": "Final corn dataset",
+      "source": "mendeley_bd",
+      "images": 2060,
+      "metadata": "raw/Final corn dataset/image_metadata.csv"
+    },
+    {
+      "folder": "Northeast Agricultural University",
+      "source": "neau",
+      "images": 856,
+      "metadata": "raw/Northeast Agricultural University/image_metadata.csv"
+    },
+    {
+      "folder": "cds",
+      "source": "cds",
+      "images": 1571,
+      "metadata": "raw/cds/image_metadata.csv"
+    },
+    {
+      "folder": "data",
+      "source": "kaggle",
+      "images": 4186,
+      "metadata": "raw/data/image_metadata.csv"
+    },
+    {
+      "folder": "kaggle_corn_leaf_disease",
+      "source": "ndisan",
+      "images": 2994,
+      "metadata": "raw/kaggle_corn_leaf_disease/image_metadata.csv"
+    },
+    {
+      "folder": "rlnst",
+      "source": "rlnst",
+      "images": 2886,
+      "metadata": "raw/rlnst/image_metadata.csv"
+    }
+  ]
+}

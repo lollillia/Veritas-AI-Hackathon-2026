@@ -1,15 +1,15 @@
 """Weather leading up to each photo: summaries for the last 7 days, 1 month, 3 months and 6 months.
 
-    python -m data_prep.weather [--metadata data/image_metadata.csv] [--out data/weather.csv]
+    python -m data_prep.weather [--metadata data/image_metadata.json] [--out data/weather.csv]
 
-One row per distinct (city, capture date) in image_metadata.csv. The city comes from the photo's
+One row per distinct (city, capture date) in the image metadata (data/image_metadata.json). The city comes from the photo's
 GPS or, failing that, its documented dataset site (see data_prep.locations); weather is queried at
 the city's centre point. Each window covers the N days ending the day before the capture date, so
 the capture day itself is not included. Source: Open-Meteo historical weather archive (ERA5
 reanalysis, daily values on a roughly 10-25 km grid), https://open-meteo.com; one request per city
 covering all its windows, cached in data/raw/weather_cache/.
 
-Join back to image_metadata.csv on city and capture_date.
+Join back to the image metadata on city and capture_date.
 """
 import argparse
 import csv
@@ -122,7 +122,7 @@ def weather_rows(keys: list[dict], fetch) -> list[dict]:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--metadata", default=Path("data/image_metadata.csv"), type=Path)
+    parser.add_argument("--metadata", default=Path("data/image_metadata.json"), type=Path)
     parser.add_argument("--out", default=Path("data/weather.csv"), type=Path)
     parser.add_argument("--cache", default=Path("data/raw/weather_cache"), type=Path)
     args = parser.parse_args()
@@ -131,9 +131,10 @@ def main() -> None:
 
     geocode_cache = Path("data/raw/geocode_cache")
     resolve = lambda lat, lon: reverse_city(lat, lon, geocode_cache)        # cached by image_metadata
-    with open(args.metadata, newline="") as f:
-        keys = weather_keys(list(csv.DictReader(f)),
-                            lambda r: locate_city(r["gps_lat"], r["gps_lon"], r["site"], resolve))
+    from data_prep.image_metadata import read_metadata
+
+    keys = weather_keys(read_metadata(args.metadata),
+                        lambda r: locate_city(r["gps_lat"], r["gps_lon"], r["site"], resolve))
     rows = weather_rows(keys, lambda lat, lon, s, e: fetch_range(lat, lon, s, e, args.cache))
     with open(args.out, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=COLUMNS, lineterminator="\n")

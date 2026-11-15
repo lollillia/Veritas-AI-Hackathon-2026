@@ -1,6 +1,6 @@
 """Weather summaries as model input: 24 numbers per image (6 stats x 4 windows), never the date.
 
-Joined to images through image_metadata.csv (city + capture_date). Images without weather get zeros
+Joined to images through the image metadata (city + capture_date). Images without weather get zeros
 and a has-weather flag of 0 after standardisation; the scaler is fitted on training images only.
 """
 from data_prep.weather import WINDOWS

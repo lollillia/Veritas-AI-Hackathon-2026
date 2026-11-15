@@ -7,6 +7,12 @@ __pycache__/
 .pytest_cache/
 data/*
 !data/splits*.csv
-!data/image_metadata.csv
+!data/image_metadata.json
 !data/weather.csv
 !data/README.md
+# per-dataset metadata files are tracked; images and caches are not
+!data/raw/
+data/raw/*
+!data/raw/*/
+data/raw/*/*
+!data/raw/*/image_metadata.csv

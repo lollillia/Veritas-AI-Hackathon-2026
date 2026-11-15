@@ -51,7 +51,7 @@ def main() -> None:
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", required=True, type=Path)
-    parser.add_argument("--metadata", default=Path("data/image_metadata.csv"), type=Path)
+    parser.add_argument("--metadata", default=Path("data/image_metadata.json"), type=Path)
     parser.add_argument("--weather", default=Path("data/weather.csv"), type=Path)
     parser.add_argument("--out", required=True, type=Path)
     parser.add_argument("--epochs", default=5, type=int)
@@ -63,8 +63,9 @@ def main() -> None:
     random.seed(args.seed); torch.manual_seed(args.seed)
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     rows = read_manifest(args.manifest)
-    with open(args.metadata, newline="") as f:
-        meta = list(csv.DictReader(f))
+    from data_prep.image_metadata import read_metadata
+
+    meta = read_metadata(args.metadata)
     with open(args.weather, newline="") as f:
         raw = raw_weather_by_md5(meta, list(csv.DictReader(f)))
     labels = sorted({r["label"] for r in rows})

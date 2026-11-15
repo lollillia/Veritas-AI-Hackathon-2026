@@ -20,14 +20,14 @@ about 560 images between splits. The builder refuses to overwrite an existing fi
 
 ## Photo metadata
 
-`data/image_metadata.csv` lists, for every image in the newest manifest (`data/splits_v3.csv`):
+`data/image_metadata.json` is an index linking one `image_metadata.csv` per dataset folder (`data/raw/<folder>/image_metadata.csv`, committed). Together they list, for every image in the newest manifest:
 `capture_date` (EXIF capture time reduced to its date), `gps_lat` / `gps_lon` (rounded to 3 decimals,
 about 110 m), `camera`, `site` (the dataset-level collection site where the source documents one) and
 `city`. The city is reverse-geocoded from the photo's GPS with OpenStreetMap Nominatim at city level,
 or, when the photo has no GPS, from the documented site's coordinates. Rural points can resolve to a
 county instead of a town (CD&S: 1,412 photos "West Lafayette", 159 "Tippecanoe County" for the same
 field). Blank means unknown. Regenerate with `python -m data_prep.image_metadata` (lookups cached in
-`data/raw/geocode_cache/`).
+`data/raw/geocode_cache/`); read all rows with `data_prep.image_metadata.read_metadata()`.
 
 | Source | Images | With capture date | With GPS | Notes |
 |---|---|---|---|---|
@@ -40,7 +40,7 @@ field). Blank means unknown. Regenerate with `python -m data_prep.image_metadata
 ## Weather before capture
 
 `data/weather.csv` summarises the weather leading up to each distinct (`city`, `capture_date`) in
-`data/image_metadata.csv`: 40 rows for 19 cities, covering all 4,590 images that have a city and a date
+the image metadata: 40 rows for 19 cities, covering all 4,590 images that have a city and a date
 (CD&S, the 25 located Kaggle photos, and the `ndisan` photos via their documented site). Join on `city` and
 `capture_date`. Regenerate with `python -m data_prep.weather` (one request per city; cached in
 `data/raw/weather_cache/`).
