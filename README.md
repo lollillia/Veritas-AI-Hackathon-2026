@@ -50,13 +50,16 @@ No model has been chosen yet; `config.yaml` has a placeholder `model_id`. To pic
 
 Note: a corn-only classifier has no "not a corn leaf" class, so it relies on the confidence threshold for that case.
 
-### Training your own (`finetuned`) — not yet run
+### Training your own (`finetuned`)
+
+A trained model is in `models/corn/` (gitignored; not in the repo). Its data, accuracy and limitations are in `models/corn/MODEL_PERFORMANCE.md`. To use it, set `detector: finetuned` in `config.yaml` and restart.
 
 ```bash
-python -m train.train --data <dir of class folders> --out models/corn --epochs 3
+pip install -r requirements-ml.txt
+python -m train.train --data <dataset dir> --out models/corn --epochs 5
 ```
 
-`--data` is a PlantVillage-style folder with one sub-folder per class. Only corn folders are used. Then set `detector: finetuned`. `train/train.py` has not been run end to end yet and may need small fixes on the first real run.
+`--data` is one folder with a sub-folder per class. Folder names are mapped to our labels by `train/labels.py`; unknown folders (for example `Streak_virus`) are ignored. The model was trained on three datasets linked together into one folder; see `MODEL_PERFORMANCE.md` for the sources and licenses. Check any new dataset for duplicates of existing images before combining them, or accuracy numbers will be inflated.
 
 ## Adding another detector
 
