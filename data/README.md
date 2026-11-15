@@ -26,18 +26,21 @@ own `README.md` with per-class counts.
 
 ## Diseases in the raw images
 
-10 diseases plus healthy leaves; **6 are fungal**, 2 viral and 1 bacterial. The study and the app use
-the fungal ones, with northern anthracnose merged into eyespot (user decision). Images are the unique
-photos in `splits_v4.csv`; the last three rows are not used.
+In the datasets used: 10 diseases plus healthy leaves; **7 are fungal**, 2 viral and 1 bacterial. The study and
+the app use 6 of the fungal ones, with northern anthracnose merged into eyespot (user decision); southern
+rust has too few photos so far. Counts are the photos in `splits_v5.csv` (16,460, all unique); the last
+four rows are not used.
 
-| Disease | Cause | Type | Images in v4 | Datasets | Label |
+| Disease | Cause | Type | Images in v5 | Datasets (images) | Label |
 |---|---|---|---|---|---|
-| Northern leaf blight | *Exserohilum turcicum* | fungus | 4,081 | `data`, `rlnst`, `cds`, multi-format, `kaggle_corn_leaf_disease`, Northeast Agricultural University | `northern_leaf_blight` |
-| Common rust | *Puccinia sorghi* | fungus | 3,524 | `data`, `rlnst`, multi-format, `kaggle_corn_leaf_disease`, `Final corn dataset` | `common_rust` |
-| Gray leaf spot | *Cercospora zeae-maydis* | fungus | 2,864 | `data`, `rlnst`, `cds`, multi-format, `Final corn dataset` | `gray_leaf_spot` |
-| Northern leaf spot | *Bipolaris zeicola* | fungus | 551 | `cds` only | `northern_leaf_spot` |
-| Eyespot / northern anthracnose | *Kabatiella zeae* | fungus | 372 (109 + 263) | multi-format, Northeast Agricultural University | `eyespot` |
-| *Healthy* | — | — | 3,825 | all except `cds` | `healthy` |
+| Northern leaf blight | *Exserohilum turcicum* | fungus | 4,221 | `data` 1,146, `kaggle_corn_leaf_disease` 1,000, `rlnst` 944, `cds` 497, Northeast Agricultural University 278, multi-format 216, `20237613` 140 | `northern_leaf_blight` |
+| Common rust | *Puccinia sorghi* | fungus | 3,631 | `data` 1,306, `kaggle_corn_leaf_disease` 994, `rlnst` 960, multi-format 135, `Final corn dataset` 129, `20237613` 107 | `common_rust` |
+| Gray leaf spot | *Cercospora zeae-maydis*; *C. zeina* in `20237613` | fungus | 3,484 | `Final corn dataset` 895, `rlnst` 783, `20237613` 620, `data` 572, `cds` 523, multi-format 91 | `gray_leaf_spot` |
+| Northern leaf spot | *Bipolaris zeicola* | fungus | 551 | `cds` 551 | `northern_leaf_spot` |
+| Eyespot / northern anthracnose | *Kabatiella zeae* | fungus | 372 | Northeast Agricultural University 263, multi-format 109 | `eyespot` |
+| Phaeosphaeria leaf spot | *Phaeosphaeria maydis* | fungus | 149 | `20237613` 149 | `phaeosphaeria_leaf_spot` |
+| *Healthy* | — | — | 4,052 | `data` 1,162, `Final corn dataset` 1,036, `kaggle_corn_leaf_disease` 1,000, Northeast Agricultural University 315, `20237613` 227, `rlnst` 199, multi-format 113 | `healthy` |
+| Southern rust | *Puccinia polysora* | fungus | — (7 single-label in `20237613`) | `20237613` | not used (too few) |
 | Maize streak | Maize streak virus (leafhopper-borne) | virus | — (210 on disk, +1,890 in the RL-NST zip) | multi-format, `rlnst` zip | not used |
 | Maize chlorotic mottle | Maize chlorotic mottle virus | virus | — (89 on disk) | `Final corn dataset` | not used |
 | Bacterial leaf streak | *Xanthomonas vasicola* pv. *vasculorum* | bacterium | — (290 on disk) | multi-format, `Final corn dataset` | not used |
@@ -47,7 +50,7 @@ Notes:
   blight and `Karat Daun` common rust; the dataset pages do not say.
 - "Northern anthracnose" (玉米北方炭疽病) usually refers to *Kabatiella zeae*, the cause of eyespot, so it is
   merged into `eyespot`. The dataset's README does not name the pathogen.
-- v5 adds `up_field` (`20237613`): 620 gray leaf spot, 149 **Phaeosphaeria leaf spot** (*Phaeosphaeria maydis*, fungus; label `phaeosphaeria_leaf_spot`, `up_field` only), 140 northern leaf blight, 107 common rust and 227 healthy. The paper confirmed its gray leaf spot pathogen as *Cercospora zeina* (not *C. zeae-maydis*). The table above counts v4 only.
+- `20237613` (`up_field`, new in v5) is the only source of Phaeosphaeria leaf spot. Its paper confirmed the gray leaf spot pathogen as *Cercospora zeina*, not *C. zeae-maydis*.
 - `northern_leaf_spot` comes from a single dataset (CD&S) and `eyespot` from two small ones, so a model
   may partly learn those datasets' look instead of the disease.
 
