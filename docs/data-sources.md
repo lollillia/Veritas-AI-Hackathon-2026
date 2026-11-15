@@ -36,23 +36,26 @@ field). Blank means unknown. Regenerate with `python -m data_prep.image_metadata
 | `maize_multiformat` | 664 | none | none | stripped even in `RAW_Image`; the 6 unreadable HEIC originals were not checked |
 | `ndisan` | 2,994 | all | none (empty placeholders) | vivo V2029, 11 days from 11 Apr to 30 Jul 2023; `site` from the dataset page; the camera clock may be off (EXIF times 05–08 and 15–17 vs the page's 12:00–14:00 WIB) |
 
-## Weather at capture time
+## Weather before capture
 
-`data/weather.csv` has the historical weather for every distinct (GPS location, capture time) in
-`data/image_metadata.csv`: 1,512 rows (1,490 CD&S, the rest from the 25 located Kaggle photos), joined back
-to images on `gps_lat`, `gps_lon`, `capture_datetime`. Columns: temperature, relative humidity, dew point,
-precipitation, cloud cover, wind speed and WMO weather code at the hour nearest the capture time, plus the
-model grid cell and time zone. Regenerate with `python -m data_prep.weather` (34 requests; responses cached
-in `data/raw/weather_cache/`).
+`data/weather.csv` summarises the weather leading up to each distinct (`city`, `capture_date`) in
+`data/image_metadata.csv`: 40 rows for 19 cities, covering all 4,590 images that have a city and a date
+(CD&S, the 25 located Kaggle photos, and the `ndisan` photos via their documented site). Join on `city` and
+`capture_date`. Regenerate with `python -m data_prep.weather` (one request per city; cached in
+`data/raw/weather_cache/`).
+
+For each window — `7d` (7 days), `1m` (30 days), `3m` (90 days), `6m` (182 days), all ending the day
+before the capture date — the file gives mean daily temperature, lowest minimum, highest maximum, total
+precipitation, rainy days (1 mm or more), mean relative humidity and the number of days with data.
 
 - **Source:** Open-Meteo historical weather archive (https://open-meteo.com), ERA5 reanalysis: modelled
-  hourly values on a grid of roughly 10–25 km, not readings from a station at the field.
-- **Time zone assumption:** EXIF capture times have no time zone, so they are treated as local time at the
-  site. If a camera clock was wrong, the hour is wrong too.
-- **Coverage:** only images with both GPS and a capture time (CD&S and 25 Kaggle photos). The `ndisan`
-  photos have capture times but no GPS; their dataset-level site is known, but their camera clock looks
-  unreliable, so no weather was fetched for them.
-- **CD&S at a glance:** 22–32 °C, 33–68 % humidity, no rain at any capture hour, cloud cover 0–100 %.
+  daily values on a grid of roughly 10–25 km, queried at the city's centre point, not a station at the
+  field. Reanalysis data tends to count more light-rain days than rain gauges do.
+- **Dates:** windows depend only on the capture date, so the `ndisan` camera-clock doubt (hours) does not
+  matter unless the date itself is wrong.
+- **Examples:** Sampang before 11 Apr 2023 (end of the wet season): 1,434 mm over 6 months, 7 rainy days in
+  the last week; before 30 Jul 2023 (dry season): 0.4 mm in the last week. West Lafayette before
+  19 Aug 2020: 1.7 mm in the last week, 92 mm in the last month.
 
 ## Sources used
 
