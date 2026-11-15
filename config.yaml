@@ -18,7 +18,7 @@ hf_pretrained:
 gated:
   model: claude-sonnet-5-5
   api_key_env: ANTHROPIC_API_KEY
-  weights_path: models/corn_fungal_v6
+  weights_path: models/corn_fungal_v6_bgaug
 
 finetuned:
-  weights_path: models/corn_fungal_v6            # local dir saved by train/train.py (11 labels, splits_v6)
+  weights_path: models/corn_fungal_v6_bgaug      # local dir saved by train/train.py (11 labels, splits_v6, background augmentation)
