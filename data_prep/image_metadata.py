@@ -119,35 +119,60 @@ def write_per_folder(rows: list[dict], raw_root: Path) -> dict[str, int]:
     return {k: len(v) for k, v in by_folder.items()}
 
 
-def write_index(repo_root: Path, per_folder: dict[str, int], index_path: Path, manifest: str) -> dict:
-    """JSON index linking each dataset folder's image_metadata.csv (paths relative to the index)."""
+def unused_folders(raw_root: Path, per_folder: dict[str, int]) -> dict[str, int]:
+    """{folder: rows} for dataset folders that have an image_metadata.csv but are not in the manifest."""
+    out = {}
+    for csv_path in sorted(Path(raw_root).glob("*/image_metadata.csv")):
+        folder = csv_path.parent.name
+        if folder not in per_folder:
+            with open(csv_path, newline="") as f:
+                out[folder] = sum(1 for _ in csv.DictReader(f))
+    return out
+
+
+def write_index(repo_root: Path, per_folder: dict[str, int], index_path: Path, manifest: str,
+                unused: dict[str, int] | None = None) -> dict:
+    """JSON index linking each dataset folder's image_metadata.csv (paths relative to the index).
+
+    Folders in `unused` (metadata written, but not in the manifest) are listed with "in_manifest": false.
+    """
     import json
 
     index_path = Path(index_path)
+    unused = unused or {}
     datasets = []
-    for folder in sorted(per_folder):
+    for folder in sorted({**per_folder, **unused}):
         csv_path = Path(repo_root) / "data" / "raw" / folder / "image_metadata.csv"
         with open(csv_path, newline="") as f:
             sources = Counter(r["source"] for r in csv.DictReader(f))
-        datasets.append({"folder": folder, "source": sources.most_common(1)[0][0] if sources else "",
-                         "images": per_folder[folder],
-                         "metadata": csv_path.resolve().relative_to(index_path.resolve().parent).as_posix()})
+        entry = {"folder": folder, "source": sources.most_common(1)[0][0] if sources else "",
+                 "images": per_folder.get(folder, unused.get(folder)),
+                 "metadata": csv_path.resolve().relative_to(index_path.resolve().parent).as_posix()}
+        if folder not in per_folder:
+            entry["in_manifest"] = False
+        datasets.append(entry)
     index = {
         "description": "Per-image metadata (label, capture date, GPS rounded to ~110 m, camera, documented site, "
-                       "city), one CSV per dataset folder. Read all rows with data_prep.image_metadata.read_metadata.",
+                       "city), one CSV per dataset folder. Read all rows with data_prep.image_metadata.read_metadata. "
+                       "total_images counts the manifest's images; datasets marked \"in_manifest\": false are not "
+                       "in the manifest (unused_images) and are skipped unless read_metadata(include_unused=True).",
         "manifest": manifest, "columns": COLUMNS, "total_images": sum(per_folder.values()), "datasets": datasets,
     }
+    if unused:
+        index["unused_images"] = sum(unused.values())
     index_path.write_text(json.dumps(index, indent=2) + "\n")
     return index
 
 
-def read_metadata(index_path: Path = Path("data/image_metadata.json")) -> list[dict]:
-    """All metadata rows, read from the per-folder files the index links to."""
+def read_metadata(index_path: Path = Path("data/image_metadata.json"), include_unused: bool = False) -> list[dict]:
+    """Metadata rows of the manifest's datasets (plus "in_manifest": false ones if include_unused), from the per-folder files."""
     import json
 
     index_path = Path(index_path)
     rows = []
     for d in json.loads(index_path.read_text())["datasets"]:
+        if not include_unused and d.get("in_manifest", True) is False:
+            continue
         p = index_path.parent / d["metadata"]
         if not p.is_file():
             raise FileNotFoundError(f"metadata file missing: {d['metadata']}")
@@ -172,7 +197,8 @@ def main() -> None:
                                     resolve_city=lambda lat, lon: reverse_city(lat, lon, cache))
         with open(all_rows, newline="") as f:
             per_folder = write_per_folder(list(csv.DictReader(f)), Path("data/raw"))
-    write_index(Path.cwd(), per_folder, args.index, args.manifest.as_posix())
+    unused = unused_folders(Path("data/raw"), per_folder)
+    write_index(Path.cwd(), per_folder, args.index, args.manifest.as_posix(), unused=unused)
     print(f"metadata: {counts}")
     print(f"wrote image_metadata.csv into {len(per_folder)} dataset folders and the index {args.index}")
 

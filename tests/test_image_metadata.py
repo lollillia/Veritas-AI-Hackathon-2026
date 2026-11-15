@@ -197,6 +197,41 @@ def test_read_metadata_names_a_missing_linked_file(tmp_path):
         read_metadata(index)
 
 
+def test_index_lists_unused_folders_separately(tmp_path):
+    from data_prep.image_metadata import write_index
+
+    _folder_csv(tmp_path, "cds", [{"path": "data/raw/cds/a.jpg", "md5": "1", "source": "cds"}])
+    _folder_csv(tmp_path, "xtu502", [{"path": "data/raw/xtu502/b.jpg", "md5": "2", "source": "xtu502"},
+                                     {"path": "data/raw/xtu502/c.jpg", "md5": "3", "source": "xtu502"}])
+    idx = write_index(tmp_path, {"cds": 1}, tmp_path / "data" / "image_metadata.json", "m.csv", unused={"xtu502": 2})
+    by = {d["folder"]: d for d in idx["datasets"]}
+    assert "in_manifest" not in by["cds"]
+    assert by["xtu502"] == {"folder": "xtu502", "source": "xtu502", "images": 2,
+                            "metadata": "raw/xtu502/image_metadata.csv", "in_manifest": False}
+    assert idx["total_images"] == 1 and idx["unused_images"] == 2
+
+
+def test_read_metadata_skips_unused_folders_unless_asked(tmp_path):
+    from data_prep.image_metadata import read_metadata, write_index
+
+    _folder_csv(tmp_path, "cds", [{"path": "data/raw/cds/a.jpg", "md5": "1", "source": "cds"}])
+    _folder_csv(tmp_path, "xtu502", [{"path": "data/raw/xtu502/b.jpg", "md5": "2", "source": "xtu502"}])
+    index = tmp_path / "data" / "image_metadata.json"
+    write_index(tmp_path, {"cds": 1}, index, "m.csv", unused={"xtu502": 1})
+    assert [r["md5"] for r in read_metadata(index)] == ["1"]
+    assert sorted(r["md5"] for r in read_metadata(index, include_unused=True)) == ["1", "2"]
+
+
+def test_unused_folders_are_the_metadata_files_outside_the_manifest(tmp_path):
+    from data_prep.image_metadata import unused_folders
+
+    _folder_csv(tmp_path, "cds", [{"path": "data/raw/cds/a.jpg", "source": "cds"}])
+    _folder_csv(tmp_path, "xtu502", [{"path": "data/raw/xtu502/b.jpg", "source": "xtu502"},
+                                     {"path": "data/raw/xtu502/c.jpg", "source": "xtu502"}])
+    (tmp_path / "data" / "raw" / "weather_cache").mkdir()
+    assert unused_folders(tmp_path / "data" / "raw", {"cds": 1}) == {"xtu502": 2}
+
+
 def test_index_works_with_a_relative_index_path(tmp_path, monkeypatch):
     from data_prep.image_metadata import read_metadata, write_index
 

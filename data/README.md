@@ -56,7 +56,7 @@ Notes:
 | `splits_v3_by_date.csv` | 12,301 | v3 with every (city, capture date) kept in one set; used for the weather-input comparison |
 | **`splits_v4.csv`** | **15,217** | v3 plus `mendeley_bd` and `neau`, append-only (no v3 image moved), **fungal labels**. Newest manifest; `models/corn_fungal` is trained on it |
 | `splits_dropped.csv`, `splits_v2_dropped.csv`, `splits_v3_dropped.csv`, `splits_v4_dropped.csv` | 2 / 28 / 34 / 638 | images left out of each manifest and why (exact duplicate, unreadable) |
-| `image_metadata.json` | 8 datasets | index linking each dataset's `raw/<folder>/image_metadata.csv` (committed): per image in v5 — label, capture date, GPS (rounded to ~110 m), camera, documented site and city; 16,460 images in total. Read all rows with `data_prep.image_metadata.read_metadata()` |
+| `image_metadata.json` | 11 datasets | index linking each dataset's `raw/<folder>/image_metadata.csv` (committed): per image — label, capture date, GPS (rounded to ~110 m), camera, documented site and city. 8 datasets / 16,460 images are in v5; 3 more (`23669328`, `china_2`, `xtu502`; 3,497 images) are marked `"in_manifest": false`. `data_prep.image_metadata.read_metadata()` returns the v5 rows; pass `include_unused=True` for all |
 | `weather.csv` | 56 | weather summaries (7 days, 1, 3 and 6 months before capture) per distinct (city, capture date); join on `city` + `capture_date` |
 
 ## Other folders

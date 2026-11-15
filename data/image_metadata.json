@@ -1,5 +1,5 @@
 {
-  "description": "Per-image metadata (label, capture date, GPS rounded to ~110 m, camera, documented site, city), one CSV per dataset folder. Read all rows with data_prep.image_metadata.read_metadata.",
+  "description": "Per-image metadata (label, capture date, GPS rounded to ~110 m, camera, documented site, city), one CSV per dataset folder. Read all rows with data_prep.image_metadata.read_metadata. total_images counts the manifest's images; datasets marked \"in_manifest\": false are not in the manifest (unused_images) and are skipped unless read_metadata(include_unused=True).",
   "manifest": "data/splits_v5.csv",
   "columns": [
     "path",
@@ -20,6 +20,13 @@
       "source": "up_field",
       "images": 1243,
       "metadata": "raw/20237613/image_metadata.csv"
+    },
+    {
+      "folder": "23669328",
+      "source": "isu_rust",
+      "images": 1309,
+      "metadata": "raw/23669328/image_metadata.csv",
+      "in_manifest": false
     },
     {
       "folder": "An Open-Source Multi-Format Maize Leaf Image Datas",
@@ -46,6 +53,13 @@
       "metadata": "raw/cds/image_metadata.csv"
     },
     {
+      "folder": "china_2",
+      "source": "china_2",
+      "images": 1655,
+      "metadata": "raw/china_2/image_metadata.csv",
+      "in_manifest": false
+    },
+    {
       "folder": "data",
       "source": "kaggle",
       "images": 4186,
@@ -62,6 +76,14 @@
       "source": "rlnst",
       "images": 2886,
       "metadata": "raw/rlnst/image_metadata.csv"
+    },
+    {
+      "folder": "xtu502",
+      "source": "xtu502",
+      "images": 533,
+      "metadata": "raw/xtu502/image_metadata.csv",
+      "in_manifest": false
     }
-  ]
+  ],
+  "unused_images": 3497
 }
