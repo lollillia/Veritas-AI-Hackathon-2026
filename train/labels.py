@@ -4,6 +4,7 @@
 # RL-NST's Streak_virus folder is deliberately not mapped, so it is never trained on.
 _BARE_CLASSES = {
     "healthy": "healthy",
+    "healthy_leaf": "healthy",
     "common_rust": "common_rust",
     "blight": "leaf_blight",
     "leaf_blight": "leaf_blight",

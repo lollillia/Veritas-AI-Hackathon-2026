@@ -128,3 +128,54 @@ def test_scan_source_returns_relative_paths_only_for_mapped_folders(tmp_path):
     rows = scan_source("kaggle", tmp_path / SOURCES["kaggle"], tmp_path)
     assert sorted(r["original_folder"] for r in rows) == ["Blight", "Healthy"]
     assert all(r["path"].startswith("data/raw/data/") for r in rows)
+
+
+def _bulk(root: Path, source_dir: str, folder: str, n: int, seed0: int):
+    for i in range(n):
+        _save(_noise(seed0 + i), root / "data" / "raw" / source_dir / folder / f"img_{i}.png")
+
+
+def test_extra_source_and_custom_output_names_leave_the_original_manifest_alone(tmp_path):
+    make_repo(tmp_path)
+    build(tmp_path)
+    original = (tmp_path / "data" / "splits.csv").read_bytes()
+    _bulk(tmp_path, "extra", "Healthy_Leaf", 3, 500)
+    sources = {**SOURCES, "extra": "data/raw/extra"}
+    build(tmp_path, sources, manifest_name="splits_v2.csv", dropped_name="splits_v2_dropped.csv")
+    assert (tmp_path / "data" / "splits.csv").read_bytes() == original
+    v2 = read_manifest(tmp_path / "data" / "splits_v2.csv")
+    assert (tmp_path / "data" / "splits_v2_dropped.csv").is_file()
+    assert {r["source"] for r in v2} >= {"extra", "kaggle"}
+    assert [r["label"] for r in v2 if r["source"] == "extra"] == ["healthy"] * 3
+
+
+def test_existing_images_keep_their_split_when_a_new_source_is_added(tmp_path):
+    make_repo(tmp_path)
+    _bulk(tmp_path, "data", "Healthy", 60, 1000)
+    _bulk(tmp_path, "rlnst/RL-NST", "Leaf_Blight", 40, 2000)
+    build(tmp_path)
+    before = {r["md5"]: r["split"] for r in read_manifest(tmp_path / "data" / "splits.csv")}
+    _bulk(tmp_path, "extra", "Healthy_Leaf", 50, 3000)
+    sources = {**SOURCES, "extra": "data/raw/extra"}
+    build(tmp_path, sources, manifest_name="splits_v2.csv", dropped_name="splits_v2_dropped.csv")
+    after = {r["md5"]: r["split"] for r in read_manifest(tmp_path / "data" / "splits_v2.csv")}
+    assert len(after) > len(before)
+    assert all(after[m] == s for m, s in before.items())
+
+
+def test_heic_file_is_recorded_as_unreadable(tmp_path):
+    make_repo(tmp_path)
+    (tmp_path / "data" / "raw" / "data" / "Healthy" / "phone.heic").write_bytes(b"\x00\x00\x00 ftypheic")
+    build(tmp_path)
+    rows = _dropped(tmp_path)
+    assert [(Path(r["path"]).name, r["reason"]) for r in rows] == [("phone.heic", "unreadable")]
+
+
+def test_cli_parse_args_extra_sources_and_output():
+    from data_prep.build_splits import parse_args
+
+    args = parse_args(["--add", "extra=data/raw/x y", "--add", "more=data/raw/z", "--out", "data/splits_v2.csv"])
+    assert args.add == {"extra": "data/raw/x y", "more": "data/raw/z"}
+    assert str(args.out) == "data/splits_v2.csv"
+    default = parse_args([])
+    assert default.add == {} and str(default.out) == "data/splits.csv"
