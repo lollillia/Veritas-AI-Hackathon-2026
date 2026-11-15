@@ -28,3 +28,8 @@ def test_failed_lookup_gives_blank_city(tmp_path):
 
 def test_documented_site_has_coordinates():
     assert SITE_COORDS[SOURCE_SITES["ndisan"]] == (-7.205, 113.247)
+
+
+def test_new_dataset_sites_are_registered():
+    assert "Harbin" in SOURCE_SITES["neau"] and SITE_COORDS[SOURCE_SITES["neau"]] == (45.728, 126.718)
+    assert "Gurudaspur" in SOURCE_SITES["mendeley_bd"] and SITE_COORDS[SOURCE_SITES["mendeley_bd"]] == (24.368, 89.233)

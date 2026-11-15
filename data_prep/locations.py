@@ -13,11 +13,17 @@ from pathlib import Path
 SOURCE_SITES = {
     "cds": "near West Lafayette, Indiana, USA (from photo GPS)",
     "ndisan": "Polagan Village, Sampang Regency, Madura, East Java, Indonesia (dataset page)",
+    "neau": "Northeast Agricultural University eastern experimental field, Harbin, Heilongjiang, China (dataset README)",
+    "mendeley_bd": "corn farms around Gurudaspur, Natore, Bangladesh (dataset page)",
 }
 # Coordinates for documented sites, used when a photo has no GPS of its own.
 SITE_COORDS: dict[str, tuple[float, float]] = {
     # OpenStreetMap Nominatim: village "Polagan, Sampang, Jawa Timur 69211, Indonesia".
     SOURCE_SITES["ndisan"]: (-7.205, 113.247),
+    # OpenStreetMap Nominatim: "Northeast Agricultural University, Xiangfang District, Harbin".
+    SOURCE_SITES["neau"]: (45.728, 126.718),
+    # OpenStreetMap Nominatim: town "Gurudaspur, Natore District, Rajshahi Division, Bangladesh".
+    SOURCE_SITES["mendeley_bd"]: (24.368, 89.233),
 }
 NOMINATIM = "https://nominatim.openstreetmap.org/reverse"
 _last_call = [0.0]
