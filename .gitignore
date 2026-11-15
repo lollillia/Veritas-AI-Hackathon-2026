@@ -5,4 +5,6 @@ __pycache__/
 .idea/
 .superpowers/
 .pytest_cache/
-data/
+data/*
+!data/splits.csv
+!data/splits_dropped.csv
