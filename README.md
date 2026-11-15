@@ -54,12 +54,11 @@ Note: a corn-only classifier has no "not a corn leaf" class, so it relies on the
 
 A trained model is in `models/corn/` (gitignored). Its accuracy and limitations are in `models/corn/MODEL_PERFORMANCE.md`: about 94% on held-out photos from its training sources, but only about 38% on a dataset it never saw. To use it, set `detector: finetuned` in `config.yaml` and restart.
 
-Data sources, licenses and label mapping are in `docs/data-sources.md`. Every image's source, label and train/dev/test split is recorded in `data/splits.csv` (committed; the images themselves are not).
+Data sources, licenses and label mapping are in `docs/data-sources.md`. Every image's source, label and train/dev/test split is recorded in `data/splits.csv` and `data/splits_v2.csv` (committed; the images themselves are not). Never regenerate these: they record what each model trained on; add data with `--base`.
 
 ```bash
 pip install -r requirements-ml.txt
-python -m data_prep.build_splits                                   # rebuild data/splits.csv
-python -m data_prep.build_splits --add NAME=PATH --base data/splits.csv --out data/splits_v2.csv   # add a source, keep existing splits
+python -m data_prep.build_splits --add NAME=PATH --base data/splits_v2.csv --out data/splits_v3.csv   # add a source; existing splits stay put
 python -m train.train --manifest data/splits.csv --out models/corn --epochs 5
 python -m train.evaluate --manifest data/splits.csv --model models/corn --split test
 ```

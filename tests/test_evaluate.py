@@ -79,3 +79,12 @@ def test_select_rows_by_split_and_source():
     assert [r["path"] for r in select_rows(rows, "all", "x")] == ["a", "b"]
     assert [r["path"] for r in select_rows(rows, "all")] == ["a", "b", "c", "d"]
     assert select_rows(rows, "dev", "x") == []
+
+
+def test_split_all_requires_a_source():
+    from train.evaluate import check_split_source
+
+    with pytest.raises(SystemExit, match="--source"):
+        check_split_source("all", None)
+    check_split_source("all", "maize_multiformat")
+    check_split_source("test", None)

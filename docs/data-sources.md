@@ -11,8 +11,10 @@ Two manifests exist:
 | `data/splits.csv` (v1) | 8,643 | `kaggle`, `rlnst`, `cds`, split 6,914 / 865 / 864. The model in `models/corn` was trained on its train split |
 | `data/splits_v2.csv` (v2) | 9,307 | v1 plus `maize_multiformat`, built **append-only** with `--base data/splits.csv`: all 8,643 v1 images keep their v1 split; the 664 new images are split 525 / 67 / 72 (groups of burst shots stay together, so not exactly 80/10/10) |
 
-The images are not in the repository (`data/raw/` is gitignored). Rebuild the manifest with
-`python -m data_prep.build_splits` after placing the downloads as described below.
+The images are not in the repository (`data/raw/` is gitignored). **Do not regenerate
+`data/splits.csv` or `data/splits_v2.csv`**: they are the record of what each model trained on.
+The builder's grouping rule changed after v1 was made, so a fresh build of the same files would move
+about 560 images between splits. The builder refuses to overwrite an existing file unless given `--force`.
 
 ## Sources used
 
@@ -75,5 +77,5 @@ Folder names are mapped to labels in `train/labels.py`.
 ## Rebuilding
 
 1. Download the three sources into the locations in the table above.
-2. `python -m data_prep.build_splits` (about a minute) writes `data/splits.csv` and `data/splits_dropped.csv`. The split uses seed 0 and is reproducible from the same files. To add a source without moving existing images: `python -m data_prep.build_splits --add "maize_multiformat=data/raw/An Open-Source Multi-Format Maize Leaf Image Datas/maize (corn) leaf images/RAW_Image" --base data/splits.csv --out data/splits_v2.csv`.
+2. To add a source without moving any existing image, build a new file on top of the newest manifest (about a minute): `python -m data_prep.build_splits --add "maize_multiformat=data/raw/An Open-Source Multi-Format Maize Leaf Image Datas/maize (corn) leaf images/RAW_Image" --base data/splits.csv --out data/splits_v2.csv`. v2 rebuilt this way reproduces byte-for-byte. A completely fresh split (new file name, seed 0) is `python -m data_prep.build_splits --out data/splits_new.csv`; models trained on another manifest cannot be scored on it.
 3. `python -m train.train --manifest data/splits.csv --out models/corn --epochs 5`, then `python -m train.evaluate --manifest data/splits.csv --model models/corn --split dev` (or `test`).

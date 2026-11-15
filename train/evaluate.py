@@ -52,6 +52,12 @@ def compute_metrics(true: list[str], pred: list[str], labels: list[str]) -> dict
     }
 
 
+def check_split_source(split: str, source: str | None) -> None:
+    """--split all includes training rows, so it is only allowed for a single (unseen) source."""
+    if split == "all" and source is None:
+        raise SystemExit("--split all includes training images; pass --source for a source the model never trained on")
+
+
 def select_rows(rows: list[dict], split: str, source: str | None = None) -> list[dict]:
     """Manifest rows for one split ("train", "dev", "test" or "all"), optionally one source, by path."""
     chosen = [r for r in rows if (split == "all" or r["split"] == split) and (source is None or r["source"] == source)]
@@ -106,6 +112,7 @@ def main() -> None:
 
     from data_prep.manifest import read_manifest
 
+    check_split_source(args.split, args.source)
     chosen = select_rows(read_manifest(args.manifest), args.split, args.source)
     if not chosen:
         raise SystemExit(f"No rows for split '{args.split}' and source '{args.source}' in {args.manifest}")

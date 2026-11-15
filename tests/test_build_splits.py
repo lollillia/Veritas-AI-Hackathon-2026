@@ -1,4 +1,6 @@
 import csv
+
+import pytest
 from pathlib import Path
 
 import numpy as np
@@ -269,3 +271,44 @@ def test_cli_parse_args_base():
     args = parse_args(["--base", "data/splits.csv", "--out", "data/splits_v2.csv"])
     assert str(args.base) == "data/splits.csv"
     assert parse_args([]).base is None
+
+
+def test_cli_refuses_to_overwrite_an_existing_manifest(tmp_path, monkeypatch):
+    from data_prep.build_splits import main
+
+    make_repo(tmp_path)
+    build(tmp_path)
+    original = (tmp_path / "data" / "splits.csv").read_bytes()
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(SystemExit, match="--force"):
+        main([])
+    assert (tmp_path / "data" / "splits.csv").read_bytes() == original
+    main(["--force"])                                     # explicit overwrite still possible
+    main(["--out", "data/splits_new.csv"])                # a new file is fine
+    assert (tmp_path / "data" / "splits_new.csv").is_file()
+
+
+def test_new_image_bridging_base_images_in_different_splits_is_left_out(tmp_path, monkeypatch):
+    import data_prep.build_splits as bs
+
+    make_repo(tmp_path)
+    _bulk(tmp_path, "data", "Healthy", 30, 4000)
+    build(tmp_path)
+    rows = read_manifest(tmp_path / "data" / "splits.csv")
+    healthy = [r for r in rows if r["label"] == "healthy"]
+    a = next(r for r in healthy if r["split"] == "train")
+    b = next(r for r in healthy if r["split"] != "train")
+    _save(_noise(9999), tmp_path / "data" / "raw" / "extra" / "Healthy_Leaf" / "bridge.png")
+    real = bs.dhash
+    fake = {a["path"]: 0, b["path"]: 0xFF, "data/raw/extra/Healthy_Leaf/bridge.png": 0x0F}   # a~c, c~b, a-b 8 bits
+    def stub(path):
+        rel = Path(path).relative_to(tmp_path).as_posix()
+        return fake.get(rel, real(path) | (1 << 63))       # keep everything else far from the stubbed hashes
+    monkeypatch.setattr(bs, "dhash", stub)
+    counts = _build_v2(tmp_path, {**SOURCES, "extra": "data/raw/extra"})
+    names = [Path(r["path"]).name for r in read_manifest(tmp_path / "data" / "splits_v2.csv")]
+    assert "bridge.png" not in names
+    with open(tmp_path / "data" / "splits_v2_dropped.csv", newline="") as f:
+        dropped = {Path(d["path"]).name: d["reason"] for d in csv.DictReader(f)}
+    assert dropped["bridge.png"] == "bridges_base_splits"
+    assert counts["new_dropped_bridging"] == 1

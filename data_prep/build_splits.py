@@ -90,11 +90,19 @@ def build(repo_root: Path, sources: dict[str, str] = SOURCES, out_dir: Path | No
     extra: dict = {}
     if base_rows:
         group_split: dict[int, str] = {}
-        conflicts = 0
+        base_splits_of: dict[int, set] = {}
         for row in kept:
             if row["md5"] in base_split:
-                first = group_split.setdefault(row["group_id"], base_split[row["md5"]])
-                conflicts += first != base_split[row["md5"]]
+                group_split.setdefault(row["group_id"], base_split[row["md5"]])
+                base_splits_of.setdefault(row["group_id"], set()).add(base_split[row["md5"]])
+        conflicting = {g for g, splits in base_splits_of.items() if len(splits) > 1}
+        # A new image grouped with base images from different splits would be a near-duplicate
+        # of an image in another split whatever split it got, so it is left out and recorded.
+        bridging = [r for r in kept if r["md5"] not in base_split and r["group_id"] in conflicting]
+        for r in bridging:
+            dropped.append({"path": r["path"], "md5": r["md5"], "reason": "bridges_base_splits", "duplicate_of": ""})
+        kept = [r for r in kept if not (r["md5"] not in base_split and r["group_id"] in conflicting)]
+        dropped.sort(key=lambda d: d["path"])
         fresh = [r for r in kept if r["md5"] not in base_split and r["group_id"] not in group_split]
         for row, split in zip(fresh, assign_splits(fresh)):
             row["split"] = split
@@ -111,7 +119,8 @@ def build(repo_root: Path, sources: dict[str, str] = SOURCES, out_dir: Path | No
             "base_missing": sum(m not in kept_md5 for m in base_split),
             "new_images": sum(r["md5"] not in base_split for r in kept),
             "new_linked_to_base": linked,
-            "groups_with_conflicting_base_splits": conflicts,
+            "groups_with_conflicting_base_splits": len(conflicting),
+            "new_dropped_bridging": len(bridging),
         }
     else:
         for row, split in zip(kept, assign_splits(kept)):
@@ -141,6 +150,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                         help="extra source folder, relative to the repo root (repeatable)")
     parser.add_argument("--out", default=Path("data/splits.csv"), type=Path,
                         help="manifest to write; the dropped list goes beside it as <name>_dropped.csv")
+    parser.add_argument("--force", action="store_true",
+                        help="overwrite --out if it already exists")
     parser.add_argument("--base", type=Path, default=None,
                         help="earlier manifest whose images keep their split (append-only)")
     args = parser.parse_args(argv)
@@ -154,9 +165,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return args
 
 
-def main() -> None:
-    args = parse_args()
+def main(argv: list[str] | None = None) -> None:
+    args = parse_args(argv)
     root = Path.cwd()
+    if (root / args.out).exists() and not args.force:
+        raise SystemExit(
+            f"{args.out} already exists and may be the manifest a model was trained on; rebuilding it "
+            f"can move images between splits. To add data use --base {args.out} --out <new file>; "
+            f"to overwrite anyway pass --force.")
     counts = build(root, {**SOURCES, **args.add}, out_dir=root / args.out.parent,
                    manifest_name=args.out.name, dropped_name=f"{args.out.stem}_dropped.csv",
                    base_manifest=args.base)
