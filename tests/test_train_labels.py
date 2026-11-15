@@ -31,6 +31,11 @@ from train.labels import folder_to_label
         # University of Pretoria "Diseases of maize in the field" (one-hot CSV columns)
         ("GLS", "gray_leaf_spot"), ("NCLB", "northern_leaf_blight"), ("PLS", "phaeosphaeria_leaf_spot"),
         ("CR", "common_rust"), ("NoFoliarSymptoms", "healthy"), ("Phaeosphaeria_Leaf_Spot", "phaeosphaeria_leaf_spot"),
+        ("SR", "southern_rust"),
+        # descriptive labels written in image_metadata.csv (china_2, xtu502)
+        ("southern_rust", "southern_rust"), ("Southern Rusts", "southern_rust"),
+        ("southern_leaf_blight", "southern_leaf_blight"), ("brown_spot", "brown_spot"),
+        ("curvularia_leaf_spot", "curvularia_leaf_spot"),
     ],
 )
 def test_folder_names_map_to_fungal_disease_labels(folder, label):
@@ -45,8 +50,8 @@ def test_folder_names_map_to_fungal_disease_labels(folder, label):
      "Maize Chlorotic Mottle Virus",
      # copies and rotations of the Kaggle corn set
      "Bercak Daun",
-     # University of Pretoria columns without a label: southern rust (too few), other, unknown
-     "SR", "Other", "UnidentifiedDisease"],
+     # University of Pretoria columns without a label: other, unknown
+     "Other", "UnidentifiedDisease"],
 )
 def test_other_crops_non_fungal_diseases_and_copies_are_ignored(folder):
     assert folder_to_label(folder) is None

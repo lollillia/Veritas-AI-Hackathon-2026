@@ -13,6 +13,10 @@ NOTES: dict[str, str] = {
     "northern_leaf_spot": "Small oval to oblong tan lesions, often with darker borders, are scattered across the leaf.",
     "eyespot": "Many small round spots with pale centres and dark rings, often with yellow halos, dot the leaf.",
     "phaeosphaeria_leaf_spot": "Small pale green to bleached, round or oval spots with dark brown borders are scattered on the leaf.",
+    "southern_rust": "Many tiny orange to golden pustules are packed densely, mostly on the upper leaf surface.",
+    "southern_leaf_blight": "Tan, spindle-shaped to rectangular lesions with buff centres lie between the veins.",
+    "brown_spot": "Many tiny yellowish to purplish-brown spots form bands across the leaf, often near the midrib.",
+    "curvularia_leaf_spot": "Small round spots with pale centres and brown rings, often with yellow halos, are scattered on the leaf.",
     "not_corn_leaf": "This image does not appear to show a corn leaf.",
 }
 

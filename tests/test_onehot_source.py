@@ -25,14 +25,16 @@ def test_only_single_label_images_with_a_label_are_returned(tmp_path):
     csv_path, img_dir = _repo(tmp_path, [
         ("a.JPG", {"GLS"}), ("b.JPG", {"PLS"}), ("c.JPG", {"NoFoliarSymptoms"}),
         ("d.JPG", {"GLS", "NCLB"}),            # multi-label: skipped
-        ("e.JPG", {"SR"}), ("f.JPG", {"Other"}), ("g.JPG", {"UnidentifiedDisease"}),   # no label: skipped
+        ("e.JPG", {"SR"}),                      # southern rust
+        ("f.JPG", {"Other"}), ("g.JPG", {"UnidentifiedDisease"}),   # no label: skipped
         ("h.JPG", set()),                       # no flags at all: skipped
     ])
     rows, skipped = scan_onehot_csv("up", csv_path, img_dir, tmp_path)
     assert [(Path(r["path"]).name, r["label"], r["original_folder"]) for r in rows] == [
-        ("a.JPG", "gray_leaf_spot", "GLS"), ("b.JPG", "phaeosphaeria_leaf_spot", "PLS"), ("c.JPG", "healthy", "NoFoliarSymptoms")]
+        ("a.JPG", "gray_leaf_spot", "GLS"), ("b.JPG", "phaeosphaeria_leaf_spot", "PLS"), ("c.JPG", "healthy", "NoFoliarSymptoms"),
+        ("e.JPG", "southern_rust", "SR")]
     assert all(r["source"] == "up" and r["path"].startswith("data/raw/up/leaf_images/") for r in rows)
-    assert skipped == {"multi_label": 1, "no_label": 4, "missing_file": 0}
+    assert skipped == {"multi_label": 1, "no_label": 3, "missing_file": 0}
 
 
 def test_missing_files_are_counted_not_fatal(tmp_path):

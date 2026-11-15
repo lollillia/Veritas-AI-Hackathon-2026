@@ -27,4 +27,5 @@ def test_label_set_is_healthy_plus_each_fungal_disease():
     from app.detectors.base import LABELS
 
     assert LABELS == ("healthy", "common_rust", "northern_leaf_blight", "gray_leaf_spot", "northern_leaf_spot",
-                      "eyespot", "phaeosphaeria_leaf_spot", "not_corn_leaf")
+                      "eyespot", "phaeosphaeria_leaf_spot", "southern_rust", "southern_leaf_blight", "brown_spot",
+                      "curvularia_leaf_spot", "not_corn_leaf")

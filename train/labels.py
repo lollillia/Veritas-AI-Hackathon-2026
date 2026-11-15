@@ -1,7 +1,7 @@
 """Dataset folder name -> label. The study covers fungal leaf diseases only.
 
 Labels: healthy, common_rust, northern_leaf_blight, gray_leaf_spot, northern_leaf_spot, eyespot,
-phaeosphaeria_leaf_spot.
+phaeosphaeria_leaf_spot, southern_rust, southern_leaf_blight, brown_spot, curvularia_leaf_spot.
 Non-fungal classes (maize streak virus, maize chlorotic mottle virus, bacterial leaf streak) and the
 ndisan "Bercak Daun" folder (copies and rotations of the Kaggle corn set) are deliberately unmapped,
 so they are never trained on.
@@ -24,9 +24,14 @@ _BARE_CLASSES = {
     "eyespot": "eyespot", "northern_anthracnose": "eyespot",
     # Phaeosphaeria leaf spot (Phaeosphaeria maydis)
     "phaeosphaeria_leaf_spot": "phaeosphaeria_leaf_spot",
-    # University of Pretoria one-hot CSV columns (SR southern rust, Other, UnidentifiedDisease: not used)
+    # southern rust (Puccinia polysora), southern leaf blight (Bipolaris maydis), brown spot (Physoderma
+    # maydis), Curvularia leaf spot (Curvularia lunata): the descriptive labels in image_metadata.csv
+    "southern_rust": "southern_rust", "southern_rusts": "southern_rust",
+    "southern_leaf_blight": "southern_leaf_blight", "brown_spot": "brown_spot",
+    "curvularia_leaf_spot": "curvularia_leaf_spot",
+    # University of Pretoria one-hot CSV columns (Other, UnidentifiedDisease: not used)
     "nclb": "northern_leaf_blight", "pls": "phaeosphaeria_leaf_spot", "cr": "common_rust",
-    "nofoliarsymptoms": "healthy",
+    "sr": "southern_rust", "nofoliarsymptoms": "healthy",
 }
 
 
