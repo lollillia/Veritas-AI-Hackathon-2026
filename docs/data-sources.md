@@ -25,7 +25,7 @@ Blank means the image carries none. Regenerate with `python -m data_prep.image_m
 | Source | Images | With capture date | With GPS | Notes |
 |---|---|---|---|---|
 | `cds` | 1,571 | all | all | one site in west-central Indiana (about 40.5° N, 87.0° W), 15 Jul to 21 Aug 2020, iPhone 11 Pro |
-| `kaggle` | 4,186 | 157 | 28 | the rest stripped; the few located ones are mostly Nebraska, two in Kenya |
+| `kaggle` | 4,186 | 157 | 25 | the rest stripped (3 more carry empty GPS placeholders); the few located ones are mostly Nebraska, two in Kenya |
 | `rlnst` | 2,886 | none | none | |
 | `maize_multiformat` | 664 | none | none | stripped even in `RAW_Image`; the 6 unreadable HEIC originals were not checked |
 
