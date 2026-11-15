@@ -117,3 +117,8 @@ def test_mask_edge_is_shrunk_so_no_backdrop_rim_remains():
     h, w = m.shape
     a = np.asarray(img.resize((w, h), Image.BILINEAR), dtype=float)
     assert a[m].min(axis=0)[1] > 60                                   # no dark (blended) pixels inside the mask
+
+
+def test_china_2_field_photos_are_background_patches():
+    from data_prep.background import FIELD_SOURCES, LAB_SOURCES
+    assert "china_2" in FIELD_SOURCES and "china_2" not in LAB_SOURCES

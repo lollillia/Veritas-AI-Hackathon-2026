@@ -13,7 +13,7 @@ from PIL import Image, ImageFilter
 
 BACKGROUND_KINDS = ("flat", "gradient", "noise", "field")
 LAB_SOURCES = {"kaggle", "rlnst", "ndisan"}             # plain-background photos that get masks
-FIELD_SOURCES = {"up_field", "cds", "mendeley_bd", "neau"}  # field photos used as background patches
+FIELD_SOURCES = {"up_field", "cds", "mendeley_bd", "neau", "china_2"}  # field photos used as background patches
 WORK_SIZE = 160          # masks are computed on a thumbnail this size
 BORDER = 4               # border strip (pixels) used to estimate the background colour
 MIN_PLAIN_BORDER = 0.15  # share of border pixels that must be plain background (grey, black, white)
