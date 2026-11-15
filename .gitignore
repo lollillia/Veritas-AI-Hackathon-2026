@@ -6,5 +6,4 @@ __pycache__/
 .superpowers/
 .pytest_cache/
 data/*
-!data/splits.csv
-!data/splits_dropped.csv
+!data/splits*.csv
