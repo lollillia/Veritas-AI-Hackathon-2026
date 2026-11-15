@@ -18,6 +18,33 @@ and each dataset folder in `raw/` has its own `README.md` with per-class counts.
 | `Final corn dataset` | [Mendeley vy629dngm8](https://data.mendeley.com/datasets/vy629dngm8/1) "Seasonal Corn Leaf Disease Dataset" | 2,943 | would be: Healthy, Gray_leaf_spot, Common_rust | Gurudaspur, Natore, Bangladesh | CC BY 4.0 | downloaded, not yet checked or used |
 | `Northeast Agricultural University` | folder from the user (details in its `README.txt`) | 856 | would be: healthy, northern leaf blight | Harbin, China; Jul–Aug 2021 | unknown | downloaded, not yet checked or used |
 
+## Diseases in the raw images
+
+10 diseases plus healthy leaves; **6 are fungal**, 2 viral and 1 bacterial. All three disease labels the
+model currently uses (`leaf_blight`, `common_rust`, `leaf_spot`) are fungal. Counts are original photos
+on disk (known copies such as `yusuf_corn`, `Bercak Daun` and the multi-format resized/augmented folders
+are left out), including the two datasets not yet used.
+
+| Disease | Cause | Type | Raw images | Datasets | Model label |
+|---|---|---|---|---|---|
+| Northern leaf blight | *Exserohilum turcicum* | fungus | 4,085 | `data`, `rlnst`, `cds`, multi-format, `kaggle_corn_leaf_disease`, Northeast Agricultural University | `leaf_blight` |
+| Common rust | *Puccinia sorghi* | fungus | 3,530 | `data`, `rlnst`, multi-format, `kaggle_corn_leaf_disease`, `Final corn dataset` | `common_rust` |
+| Gray leaf spot | *Cercospora zeae-maydis* | fungus | 3,477 | `data`, `rlnst`, `cds`, multi-format, `Final corn dataset` | `leaf_spot` |
+| Northern leaf spot | *Bipolaris zeicola* | fungus | 551 | `cds` | `leaf_spot` |
+| Northern anthracnose | likely *Kabatiella zeae* (see note) | fungus | 263 | Northeast Agricultural University | none yet |
+| Eyespot | *Kabatiella* (*Aureobasidium*) *zeae* | fungus | 115 | multi-format | `leaf_spot` |
+| Maize streak | Maize streak virus (leafhopper-borne) | virus | 210 (+1,890 in the RL-NST zip, not extracted) | multi-format, `rlnst` zip | excluded on purpose |
+| Maize chlorotic mottle | Maize chlorotic mottle virus | virus | 89 | `Final corn dataset` | none |
+| Bacterial leaf streak | *Xanthomonas vasicola* pv. *vasculorum* | bacterium | 290 | multi-format, `Final corn dataset` | none |
+| *Healthy* | — | — | 3,834 | all except `cds` | `healthy` |
+
+Notes:
+- "Blight" folders (`data/Blight`, `Corn_Leaf_Blight`, `Hawar Daun`) are assumed to be northern leaf
+  blight and `Karat Daun` common rust; the dataset pages do not say. Southern leaf blight or southern rust
+  would also be fungal.
+- "Northern anthracnose" (玉米北方炭疽病) usually refers to *Kabatiella zeae*, the cause of eyespot; if so,
+  it is the same disease as the multi-format `Eyespot` folder. The dataset's README does not name the pathogen.
+
 ## Generated files (`data/`)
 
 | File | Rows | What it is |
