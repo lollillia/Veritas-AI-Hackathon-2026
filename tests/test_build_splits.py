@@ -389,3 +389,65 @@ def test_cli_parse_args_onehot():
     args = parse_args(["--add-onehot", "up=data/raw/up/Database.csv,data/raw/up/leaf_images"])
     assert args.add_onehot == {"up": ("data/raw/up/Database.csv", "data/raw/up/leaf_images")}
     assert parse_args([]).add_onehot == {}
+
+
+def _metadata_csv(path, rows):
+    from data_prep.image_metadata import COLUMNS
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=COLUMNS); w.writeheader()
+        for r in rows:
+            w.writerow({c: "" for c in COLUMNS} | r)
+
+
+def test_build_includes_sources_labelled_by_their_image_metadata_csv(tmp_path):
+    make_repo(tmp_path)
+    ds = tmp_path / "data" / "raw" / "cn"
+    _save(_noise(9201), ds / "data" / "SCR1.jpg", format="JPEG")
+    _save(_noise(9202), ds / "data" / "SUM1.jpg", format="JPEG")
+    _save(_noise(9203), ds / "data" / "XX1.jpg", format="JPEG")
+    _metadata_csv(ds / "image_metadata.csv", [
+        {"path": "data/raw/cn/data/SCR1.jpg", "label": "southern_rust"},
+        {"path": "data/raw/cn/data/SUM1.jpg", "label": ""},                  # blank: not used
+        {"path": "data/raw/cn/data/XX1.jpg", "label": "made_up_disease"},    # not a project label
+        {"path": "data/raw/cn/data/gone.jpg", "label": "brown_spot"},        # missing file
+    ])
+    counts = build(tmp_path, metadata_sources={"cn": "data/raw/cn/image_metadata.csv"})
+    by = {Path(r["path"]).name: r for r in _manifest(tmp_path)}
+    assert by["SCR1.jpg"]["label"] == "southern_rust" and by["SCR1.jpg"]["source"] == "cn"
+    assert by["SCR1.jpg"]["original_folder"] == "data"
+    assert "SUM1.jpg" not in by and "XX1.jpg" not in by
+    assert counts["metadata_skipped"]["cn"] == {"no_label": 2, "missing_file": 1}
+
+
+def test_excluded_paths_are_left_out_and_recorded(tmp_path):
+    make_repo(tmp_path)
+    build(tmp_path, exclude={"data/raw/data/Blight/b.png"})
+    assert "data/raw/data/Blight/b.png" not in {r["path"] for r in _manifest(tmp_path)}
+    assert [(d["path"], d["reason"]) for d in _dropped(tmp_path)] == [("data/raw/data/Blight/b.png", "excluded")]
+
+
+def test_new_copy_with_a_different_label_than_an_existing_image_is_left_out(tmp_path):
+    sources = _v1_then_extra(tmp_path)
+    big = _structured(64)
+    _save(big, tmp_path / "data" / "raw" / "data" / "Healthy" / "orig.png")
+    build(tmp_path)
+    _save(big.resize((48, 48), Image.LANCZOS), tmp_path / "data" / "raw" / "extra" / "Leaf_Blight" / "relabelled.jpg", quality=90)
+    _save(_noise(9301), tmp_path / "data" / "raw" / "extra" / "Leaf_Blight" / "fresh.png")
+    counts = _build_v2(tmp_path, sources)
+    names = {Path(r["path"]).name for r in read_manifest(tmp_path / "data" / "splits_v2.csv")}
+    assert "relabelled.jpg" not in names and "fresh.png" in names and "orig.png" in names
+    with open(tmp_path / "data" / "splits_v2_dropped.csv", newline="") as f:
+        dropped = {Path(d["path"]).name: d for d in csv.DictReader(f)}
+    assert dropped["relabelled.jpg"]["reason"] == "copy_with_other_label"
+    assert Path(dropped["relabelled.jpg"]["duplicate_of"]).name == "orig.png"
+    assert counts["new_dropped_other_label_copy"] == 1
+
+
+def test_cli_parse_args_metadata_sources_and_excludes():
+    from data_prep.build_splits import parse_args
+
+    args = parse_args(["--add-metadata", "cn=data/raw/cn/image_metadata.csv", "--exclude", "a/b.jpg", "--exclude", "c d.jpg"])
+    assert args.add_metadata == {"cn": "data/raw/cn/image_metadata.csv"}
+    assert args.exclude == ["a/b.jpg", "c d.jpg"]
+    assert parse_args([]).add_metadata == {} and parse_args([]).exclude == []

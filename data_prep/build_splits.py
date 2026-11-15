@@ -14,8 +14,11 @@ from datetime import datetime
 from collections import Counter
 from pathlib import Path
 
-from data_prep.grouping import burst_group_ids, dhash, group_ids, merge_partitions, thumb_vector
+import numpy as np
+
+from data_prep.grouping import _popcount, burst_group_ids, dhash, group_ids, merge_partitions, thumb_vector
 from data_prep.manifest import read_manifest, write_dropped, write_manifest
+from data_prep.metadata_source import scan_metadata_csv
 from data_prep.onehot_source import scan_onehot_csv
 from data_prep.splitting import assign_splits
 from train.labels import folder_to_label
@@ -70,12 +73,17 @@ def scan_source(name: str, root: Path, repo_root: Path) -> list[dict]:
 
 def build(repo_root: Path, sources: dict[str, str] = SOURCES, out_dir: Path | None = None,
           manifest_name: str = "splits.csv", dropped_name: str = "splits_dropped.csv",
-          base_manifest: Path | None = None, onehot_sources: dict | None = None) -> dict:
+          base_manifest: Path | None = None, onehot_sources: dict | None = None,
+          metadata_sources: dict | None = None, exclude: set | None = None) -> dict:
     """Scan, de-duplicate, group and split; write the manifest and the dropped list.
 
     With base_manifest (an earlier splits.csv), every image already in it keeps its split
     (append-only): exact duplicates prefer the base copy, a new image grouped with a base
-    image takes that image's split, and only the remaining new images are split 80/10/10.
+    image takes that image's split, and only the remaining new images are split 80/10/10. A new image
+    that is a (pixel-confirmed) copy of an image with a different label is left out.
+
+    metadata_sources maps a source name to a dataset's image_metadata.csv (labels from its label column);
+    exclude is a set of repo-relative paths to leave out (recorded as "excluded"), e.g. mislabelled images.
     """
     repo_root = Path(repo_root)
     out_dir = Path(out_dir) if out_dir else repo_root / "data"
@@ -90,12 +98,20 @@ def build(repo_root: Path, sources: dict[str, str] = SOURCES, out_dir: Path | No
     for name, (csv_path, image_dir) in sorted((onehot_sources or {}).items()):
         rows, onehot_skipped[name] = scan_onehot_csv(name, repo_root / csv_path, repo_root / image_dir, repo_root)
         candidates += rows
+    metadata_skipped = {}
+    for name, csv_path in sorted((metadata_sources or {}).items()):
+        rows, metadata_skipped[name] = scan_metadata_csv(name, repo_root / csv_path, repo_root)
+        candidates += rows
     candidates.sort(key=lambda r: (r["path"] not in base_paths, r["path"]))   # base copies win ties
 
     kept, dropped = [], []
     seen: dict[str, str] = {}                      # md5 -> path of the kept file
+    exclude = set(exclude or ())
     for row in candidates:
         full = repo_root / row["path"]
+        if row["path"] in exclude:
+            dropped.append({"path": row["path"], "md5": "", "reason": "excluded", "duplicate_of": ""})
+            continue
         md5 = hashlib.md5(full.read_bytes()).hexdigest()
         try:
             h = dhash(full)
@@ -118,7 +134,8 @@ def build(repo_root: Path, sources: dict[str, str] = SOURCES, out_dir: Path | No
                 thumbs[k] = thumb_vector(repo_root / kept[k]["path"])
         return float(thumbs[i] @ thumbs[j]) >= LOOK_ALIKE_MIN_CORRELATION
 
-    look_alike = group_ids([r.pop("_hash") for r in kept], keys=[r["label"] for r in kept], allow=confirmed)
+    hashes = [r.pop("_hash") for r in kept]
+    look_alike = group_ids(hashes, keys=[r["label"] for r in kept], allow=confirmed)
     bursts = burst_group_ids([filename_time(Path(r["path"]).name) for r in kept],
                              [(r["source"], r["original_folder"], r["label"]) for r in kept], BURST_WINDOW_S)
     for row, gid in zip(kept, merge_partitions(look_alike, bursts)):
@@ -126,6 +143,21 @@ def build(repo_root: Path, sources: dict[str, str] = SOURCES, out_dir: Path | No
 
     extra: dict = {}
     if base_rows:
+        # A new image that copies an image filed under another label: one of the two labels is wrong, and
+        # keeping both could put the same picture in train and test with different answers.
+        arr = np.array(hashes, dtype=np.uint64)
+        other_label: dict[int, int] = {}
+        for i, row in enumerate(kept):
+            if row["md5"] in base_split:
+                continue
+            for j in np.nonzero(_popcount(arr ^ arr[i]) <= 4)[0].tolist():
+                if j != i and kept[j]["label"] != row["label"] and confirmed(i, j):
+                    other_label[i] = j
+                    break
+        for i, j in other_label.items():
+            dropped.append({"path": kept[i]["path"], "md5": kept[i]["md5"], "reason": "copy_with_other_label",
+                            "duplicate_of": kept[j]["path"]})
+        kept = [r for i, r in enumerate(kept) if i not in other_label]
         group_split: dict[int, str] = {}
         base_splits_of: dict[int, set] = {}
         for row in kept:
@@ -158,6 +190,7 @@ def build(repo_root: Path, sources: dict[str, str] = SOURCES, out_dir: Path | No
             "new_linked_to_base": linked,
             "groups_with_conflicting_base_splits": len(conflicting),
             "new_dropped_bridging": len(bridging),
+            "new_dropped_other_label_copy": len(other_label),
         }
     else:
         for row, split in zip(kept, assign_splits(kept)):
@@ -178,6 +211,7 @@ def build(repo_root: Path, sources: dict[str, str] = SOURCES, out_dir: Path | No
         "multi_image_group_images": sum(n for n in sizes.values() if n > 1),
         "largest_group": max(sizes.values(), default=0),
         **({"onehot_skipped": onehot_skipped} if onehot_skipped else {}),
+        **({"metadata_skipped": metadata_skipped} if metadata_skipped else {}),
         **extra,
     }
 
@@ -190,6 +224,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                         help="manifest to write; the dropped list goes beside it as <name>_dropped.csv")
     parser.add_argument("--add-onehot", action="append", default=[], metavar="NAME=CSV,IMAGE_DIR",
                         help="extra source labelled by a one-hot CSV (repeatable)")
+    parser.add_argument("--add-metadata", action="append", default=[], metavar="NAME=CSV",
+                        help="extra source labelled by its image_metadata.csv label column (repeatable)")
+    parser.add_argument("--exclude", action="append", default=[], metavar="PATH",
+                        help="repo-relative image path to leave out, e.g. a mislabelled image (repeatable)")
     parser.add_argument("--force", action="store_true",
                         help="overwrite --out if it already exists")
     parser.add_argument("--base", type=Path, default=None,
@@ -210,6 +248,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             parser.error(f"--add-onehot expects NAME=CSV,IMAGE_DIR, got '{item}'")
         onehot[name] = (csv_path, image_dir)
     args.add_onehot = onehot
+    metadata = {}
+    for item in args.add_metadata:
+        name, sep, csv_path = item.partition("=")
+        if not (sep and name and csv_path):
+            parser.error(f"--add-metadata expects NAME=CSV, got '{item}'")
+        metadata[name] = csv_path
+    args.add_metadata = metadata
     return args
 
 
@@ -223,7 +268,8 @@ def main(argv: list[str] | None = None) -> None:
             f"to overwrite anyway pass --force.")
     counts = build(root, {**SOURCES, **args.add}, out_dir=root / args.out.parent,
                    manifest_name=args.out.name, dropped_name=f"{args.out.stem}_dropped.csv",
-                   base_manifest=args.base, onehot_sources=args.add_onehot)
+                   base_manifest=args.base, onehot_sources=args.add_onehot,
+                   metadata_sources=args.add_metadata, exclude=set(args.exclude))
     for key, value in counts.items():
         print(f"{key}: {value}")
     print(f"wrote {args.out} and {args.out.parent / (args.out.stem + '_dropped.csv')}", file=sys.stderr)
