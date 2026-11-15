@@ -1,8 +1,8 @@
 # Data
 
 Everything the corn leaf model is trained and evaluated on. The study covers **fungal** leaf diseases:
-the labels are `healthy`, `common_rust`, `northern_leaf_blight`, `gray_leaf_spot`, `northern_leaf_spot`
-and `eyespot`. Image files live in `data/raw/` and are **not** in git; the CSV files listed below are
+the labels are `healthy`, `common_rust`, `northern_leaf_blight`, `gray_leaf_spot`, `northern_leaf_spot`,
+`eyespot` and `phaeosphaeria_leaf_spot`. Image files live in `data/raw/` and are **not** in git; the CSV files listed below are
 committed and record exactly which images are used and how. More detail (label mapping, known issues,
 licenses) is in [`docs/data-sources.md`](../docs/data-sources.md), and each dataset folder in `raw/` has its
 own `README.md` with per-class counts.
@@ -18,6 +18,7 @@ own `README.md` with per-class counts.
 | `kaggle_corn_leaf_disease` | [Kaggle ndisan/corn-leaf-disease](https://www.kaggle.com/datasets/ndisan/corn-leaf-disease) | 4,000 | Daun Sehat (healthy), Hawar Daun (northern_leaf_blight), Karat Daun (common_rust) | Polagan Village, Sampang, East Java, Indonesia; Apr–Jul 2023 | MIT | used since v3 (2,994); `Bercak Daun` not used (copies) |
 | `Final corn dataset` | [Mendeley vy629dngm8](https://data.mendeley.com/datasets/vy629dngm8/1) "Seasonal Corn Leaf Disease Dataset" | 2,943 (2,060 unique) | Healthy, Gray_leaf_spot, Common_rust | Gurudaspur, Natore, Bangladesh; Dec 2022 – Feb 2024 | CC BY 4.0 | used in v4 (2,060); 604 internal duplicate files dropped; bacterial streak and chlorotic mottle virus not used |
 | `Northeast Agricultural University` | folder from the user (details in its `README.txt`) | 856 | healthy maize leaves, maize northern leaf blight, maize northern anthracnose (eyespot) | Harbin, China; Jul–Aug 2021 | unknown | used in v4 (856) |
+| `20237613` | [University of Pretoria 20237613](https://researchdata.up.ac.za/articles/dataset/Diseases_of_maize_in_the_field/20237613) "Diseases of maize in the field" (source `up_field`; [paper](https://doi.org/10.3390/plants11151942)) | 2,355 (multi-label) | single-label photos from `Database.csv`: GLS (gray_leaf_spot), NCLB (northern_leaf_blight), PLS (phaeosphaeria_leaf_spot), CR (common_rust), NoFoliarSymptoms (healthy) | maize fields in Mpumalanga, KwaZulu-Natal and Eastern Cape, South Africa; late summer 2009, 2012, 2019, 2020 | CC BY 4.0 | used in v5 (1,243); multi-label photos, southern rust, "Other" and unidentified not used; `leaf_images.zip` is a 10 GB duplicate |
 | `yusuf_corn` | [Kaggle yusufmurtaza01/corn-leaf-diseases](https://www.kaggle.com/datasets/yusufmurtaza01/corn-leaf-diseases) | 4,027 | — | — | not checked | not used: 3,992 images duplicate `data` |
 | `china_2` | folder from the user with `desc.json` (a Chinese description per image). Probably the CAAS image–text corn disease dataset ([*Journal of Agricultural Big Data* 2025](https://opaj.napstic.cn/periodicalArticle/0120251000190036)); unconfirmed | 1,655 (965 new) | `data/` by code: NLB, CR, SLB, SCR (southern rust), GLS, SUM (dwarf mosaic), CBS (brown spot), CLS (Curvularia), NLS | new images: Shandong, Gansu, Henan, Guizhou, Yunnan, Anhui (China), 2014–2023 | unknown | not used; GLS, NLB and NLS (690) are byte-identical CD&S copies |
 | `23669328` | [Iowa State figshare 23669328](https://iastate.figshare.com/articles/dataset/Images_and_annotations_of_em_Puccinia_sorghi_em_infected_maize_leaves/23669328) (source `isu_rust`) | 1,309 | scanned leaf strips (TIFF) with pustule outlines; 1,033 with pustules (common_rust) | Ames, Iowa, USA; 2018–2021 | CC BY-NC 4.0 | not used: scanner style would be a shortcut for common rust |
@@ -46,6 +47,7 @@ Notes:
   blight and `Karat Daun` common rust; the dataset pages do not say.
 - "Northern anthracnose" (玉米北方炭疽病) usually refers to *Kabatiella zeae*, the cause of eyespot, so it is
   merged into `eyespot`. The dataset's README does not name the pathogen.
+- v5 adds `up_field` (`20237613`): 620 gray leaf spot, 149 **Phaeosphaeria leaf spot** (*Phaeosphaeria maydis*, fungus; label `phaeosphaeria_leaf_spot`, `up_field` only), 140 northern leaf blight, 107 common rust and 227 healthy. The paper confirmed its gray leaf spot pathogen as *Cercospora zeina* (not *C. zeae-maydis*). The table above counts v4 only.
 - `northern_leaf_spot` comes from a single dataset (CD&S) and `eyespot` from two small ones, so a model
   may partly learn those datasets' look instead of the disease.
 
@@ -70,8 +72,9 @@ Notes:
 | `splits_v2.csv` | 9,307 | v1 plus `maize_multiformat`, append-only. `models/corn_v2` was trained on it |
 | `splits_v3.csv` | 12,301 | v2 plus `ndisan`, append-only, merged labels (`leaf_blight`, `leaf_spot`) |
 | `splits_v3_by_date.csv` | 12,301 | v3 with every (city, capture date) kept in one set; used for the weather-input comparison |
-| **`splits_v4.csv`** | **15,217** | v3 plus `mendeley_bd` and `neau`, append-only (no v3 image moved), **fungal labels**. Newest manifest; `models/corn_fungal` is trained on it |
-| `splits_dropped.csv`, `splits_v2_dropped.csv`, `splits_v3_dropped.csv`, `splits_v4_dropped.csv` | 2 / 28 / 34 / 638 | images left out of each manifest and why (exact duplicate, unreadable) |
+| **`splits_v4.csv`** | **15,217** | v3 plus `mendeley_bd` and `neau`, append-only (no v3 image moved), **fungal labels**. `models/corn_fungal` is trained on it |
+| **`splits_v5.csv`** | **16,460** | v4 plus `up_field` (University of Pretoria field photos, 1,243), append-only, adds `phaeosphaeria_leaf_spot`. Newest manifest; `models/corn_fungal_v5` and `models/corn_fungal_v5_bgaug` are trained on it |
+| `splits_dropped.csv`, `splits_v2_dropped.csv`, `splits_v3_dropped.csv`, `splits_v4_dropped.csv`, `splits_v5_dropped.csv` | 2 / 28 / 34 / 638 / 653 | images left out of each manifest and why (exact duplicate, unreadable) |
 | `image_metadata.json` | 11 datasets | index linking each dataset's `raw/<folder>/image_metadata.csv` (committed): per image — label, capture date, GPS (rounded to ~110 m), camera, documented site and city. 8 datasets / 16,460 images are in v5; 3 more (`23669328`, `china_2`, `xtu502`; 3,497 images) are marked `"in_manifest": false`. `data_prep.image_metadata.read_metadata()` returns the v5 rows; pass `include_unused=True` for all |
 | `weather.csv` | 71 | weather summaries (7 days, 1, 3 and 6 months before capture) per distinct (city, capture date); join on `city` + `capture_date`. 57 rows are for v5 photos; 14 are `china_2` rows, built with `python -m data_prep.weather --include-unused`. **9 of those `china_2` rows (dated 2023-12-06) are unreliable:** all 499 of `china_2`'s 2023 photos carry that one EXIF date across 8 provinces, including rust in December, so it is probably a processing date. `23669328` is left out: most of its leaves were scanned Jan–Apr in Iowa, so they were likely grown indoors. `xtu502` has no dates |
 
@@ -87,7 +90,7 @@ Never regenerate an existing manifest (the builder refuses without `--force`): e
 model was trained on. Add data on top of the newest one instead:
 
 ```bash
-python -m data_prep.build_splits --add NAME=PATH --base data/splits_v4.csv --out data/splits_v5.csv
+python -m data_prep.build_splits --add NAME=PATH --base data/splits_v5.csv --out data/splits_v6.csv
 python -m data_prep.image_metadata --manifest data/splits_v5.csv   # per-folder CSVs + image_metadata.json
 python -m data_prep.weather
 ```
