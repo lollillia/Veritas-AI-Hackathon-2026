@@ -65,3 +65,17 @@ def test_format_markdown_shows_na_for_none():
     text = format_markdown(m, metrics_by_source([("a", "a", "kaggle")]), "Dev split")
     assert "Dev split" in text and "n/a" in text and "kaggle" in text
     assert "None" not in text
+
+
+def _r(path, split, source):
+    return {"path": path, "split": split, "source": source, "label": "healthy"}
+
+
+def test_select_rows_by_split_and_source():
+    from train.evaluate import select_rows
+
+    rows = [_r("b", "test", "x"), _r("a", "train", "x"), _r("c", "dev", "y"), _r("d", "test", "y")]
+    assert [r["path"] for r in select_rows(rows, "test")] == ["b", "d"]
+    assert [r["path"] for r in select_rows(rows, "all", "x")] == ["a", "b"]
+    assert [r["path"] for r in select_rows(rows, "all")] == ["a", "b", "c", "d"]
+    assert select_rows(rows, "dev", "x") == []
