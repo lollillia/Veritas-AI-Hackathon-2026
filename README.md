@@ -52,14 +52,19 @@ Note: a corn-only classifier has no "not a corn leaf" class, so it relies on the
 
 ### Training your own (`finetuned`)
 
-A trained model is in `models/corn/` (gitignored; not in the repo). Its data, accuracy and limitations are in `models/corn/MODEL_PERFORMANCE.md`. To use it, set `detector: finetuned` in `config.yaml` and restart.
+A trained model is in `models/corn/` (gitignored). Its accuracy and limitations are in `models/corn/MODEL_PERFORMANCE.md`: about 94% on held-out photos from its training sources, but only about 38% on a dataset it never saw. To use it, set `detector: finetuned` in `config.yaml` and restart.
+
+Data sources, licenses and label mapping are in `docs/data-sources.md`. Every image's source, label and train/dev/test split is recorded in `data/splits.csv` (committed; the images themselves are not).
 
 ```bash
 pip install -r requirements-ml.txt
-python -m train.train --data <dataset dir> --out models/corn --epochs 5
+python -m data_prep.build_splits                                   # rebuild data/splits.csv
+python -m data_prep.build_splits --add NAME=PATH --base data/splits.csv --out data/splits_v2.csv   # add a source, keep existing splits
+python -m train.train --manifest data/splits.csv --out models/corn --epochs 5
+python -m train.evaluate --manifest data/splits.csv --model models/corn --split test
 ```
 
-`--data` is one folder with a sub-folder per class. Folder names are mapped to our labels by `train/labels.py`; unknown folders (for example `Streak_virus`) are ignored. The model was trained on three datasets linked together into one folder; see `MODEL_PERFORMANCE.md` for the sources and licenses. Check any new dataset for duplicates of existing images before combining them, or accuracy numbers will be inflated.
+Folder names are mapped to labels by `train/labels.py`; unknown folders (for example `Streak_virus`) are ignored. The older `--data <folder>` mode of `train.train` still works but makes its own random split.
 
 ## Adding another detector
 
