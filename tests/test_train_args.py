@@ -53,3 +53,15 @@ def test_empty_train_or_dev_exits(tmp_path):
     write_manifest([_row("a.jpg", "train")], tmp_path / "m.csv")      # no dev rows
     with pytest.raises(SystemExit, match="dev"):
         samples_from_manifest(tmp_path / "m.csv", tmp_path)
+
+
+def test_background_augmentation_flags():
+    args = parse_args(["--manifest", "m.csv", "--bg-augment"])
+    assert args.bg_augment and args.bg_prob == 0.7 and str(args.mask_cache) == "data/raw/mask_cache"
+    assert not parse_args(["--manifest", "m.csv"]).bg_augment
+
+
+def test_background_augmentation_needs_a_manifest():
+    import pytest as _pytest
+    with _pytest.raises(SystemExit):
+        parse_args(["--data", "d", "--bg-augment"])

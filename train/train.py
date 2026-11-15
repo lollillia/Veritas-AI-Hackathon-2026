@@ -37,7 +37,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--epochs", default=3, type=int)
     parser.add_argument("--base-model", default="google/mobilenet_v2_1.0_224")
     parser.add_argument("--val-fraction", default=0.1, type=float)
-    return parser.parse_args(argv)
+    parser.add_argument("--bg-augment", action="store_true",
+                        help="replace backgrounds of lab-style training photos (needs --manifest and cached masks)")
+    parser.add_argument("--bg-prob", default=0.7, type=float, help="chance per training image and epoch")
+    parser.add_argument("--mask-cache", default=Path("data/raw/mask_cache"), type=Path)
+    args = parser.parse_args(argv)
+    if args.bg_augment and not args.manifest:
+        parser.error("--bg-augment needs --manifest")
+    return args
 
 
 def samples_from_manifest(manifest: Path, root: Path) -> tuple[list[tuple[Path, str]], list[tuple[Path, str]]]:
@@ -83,9 +90,23 @@ def main() -> None:
 
     processor = AutoImageProcessor.from_pretrained(args.base_model)
 
+    augment_info, field_pool = {}, []
+    if args.bg_augment:
+        from data_prep.background import FIELD_SOURCES, LAB_SOURCES, load_mask, replace_background
+        from data_prep.manifest import read_manifest
+
+        train_rows = [r for r in read_manifest(args.manifest) if r["split"] == "train"]
+        field_pool = [args.repo_root / r["path"] for r in train_rows if r["source"] in FIELD_SOURCES]
+        for r in train_rows:
+            if r["source"] in LAB_SOURCES and (args.mask_cache / f"{r['md5']}.png").is_file():
+                augment_info[str(args.repo_root / r["path"])] = r["md5"]
+        aug_rng = random.Random(0)
+        print(f"background augmentation: {len(augment_info)} lab-style training images with masks, "
+              f"{len(field_pool)} field photos as background patches, p={args.bg_prob}")
+
     class Ds(torch.utils.data.Dataset):
-        def __init__(self, items):
-            self.items = items
+        def __init__(self, items, augment=False):
+            self.items, self.augment = items, augment
 
         def __len__(self):
             return len(self.items)
@@ -93,6 +114,11 @@ def main() -> None:
         def __getitem__(self, i):
             path, label = self.items[i]
             image = Image.open(path).convert("RGB")
+            md5 = augment_info.get(str(path)) if self.augment else None
+            if md5 and aug_rng.random() < args.bg_prob:
+                mask = load_mask(args.mask_cache, md5)
+                if mask is not None:
+                    image = replace_background(image, mask, aug_rng, pool=field_pool)
             pixel_values = processor(image, return_tensors="pt")["pixel_values"][0]
             return {"pixel_values": pixel_values, "labels": label2id[label]}
 
@@ -123,7 +149,7 @@ def main() -> None:
             remove_unused_columns=False,
             report_to=[],
         ),
-        train_dataset=Ds(train_samples),
+        train_dataset=Ds(train_samples, augment=args.bg_augment),
         eval_dataset=Ds(val_samples),
         compute_metrics=accuracy,
     )
