@@ -144,6 +144,9 @@ def test_detector_runs_off_the_event_loop():
 def test_index_page_has_a_display_name_for_every_label():
     from app.detectors.base import LABELS
 
+    import re
+
     html = client_for().get("/").text
     for label in LABELS:
-        assert f"{label}:" in html, f"UI has no display name for {label}"
+        # a whole key, not the tail of a longer one (leaf_blight vs northern_leaf_blight)
+        assert re.search(rf"(?<![\w]){label}:", html), f"UI has no display name for {label}"
