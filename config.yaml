@@ -1,8 +1,8 @@
 # Which detector the website uses: hf_pretrained | finetuned | llm_vision
-detector: llm_vision
+detector: finetuned
 
 # Below this confidence the UI shows "not sure".
-min_confidence: 0.5
+min_confidence: 0.9   # corn_fungal_v6 cannot say "not a corn leaf"; 0.9 shows "not sure" for ~83% of non-corn photos
 
 # Secrets are never stored here. Only the NAME of the environment variable.
 llm_vision:
@@ -14,4 +14,4 @@ hf_pretrained:
   label_map: {}                                  # model label -> our label
 
 finetuned:
-  weights_path: models/corn                      # local dir saved by train/train.py
+  weights_path: models/corn_fungal_v6            # local dir saved by train/train.py (11 labels, splits_v6)
