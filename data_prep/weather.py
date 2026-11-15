@@ -25,7 +25,7 @@ DAILY = ["temperature_2m_mean", "temperature_2m_max", "temperature_2m_min", "pre
 WINDOWS = {"7d": 7, "1m": 30, "3m": 90, "6m": 182}
 RAINY_DAY_MM = 1.0
 STATS = ["temp_mean_c", "temp_min_c", "temp_max_c", "precip_mm", "rainy_days", "rh_mean_pct", "days"]
-COLUMNS = (["city", "city_lat", "city_lon", "capture_date", "timezone"]
+COLUMNS = (["city", "capture_date", "timezone"]
            + [f"{w}_{s}" for w in WINDOWS for s in STATS] + ["source", "note"])
 SOURCE = "Open-Meteo historical archive (ERA5 reanalysis)"
 
@@ -106,8 +106,7 @@ def weather_rows(keys: list[dict], fetch) -> list[dict]:
     for k in keys:
         data, error = fetched[k["city"]]
         row = {c: "" for c in COLUMNS}
-        row.update({"city": k["city"], "city_lat": k["city_lat"], "city_lon": k["city_lon"],
-                    "capture_date": k["capture_date"], "source": SOURCE, "note": error})
+        row.update({"city": k["city"], "capture_date": k["capture_date"], "source": SOURCE, "note": error})
         if data is not None:
             row["timezone"] = data.get("timezone", "")
             short = []

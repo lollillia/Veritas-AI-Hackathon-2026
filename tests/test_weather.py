@@ -72,3 +72,8 @@ def test_failed_fetch_keeps_the_row_with_a_note():
 
 def test_window_names():
     assert WINDOWS == {"7d": 7, "1m": 30, "3m": 90, "6m": 182}
+
+
+def test_output_has_no_city_coordinates():
+    assert "city_lat" not in COLUMNS and "city_lon" not in COLUMNS
+    assert COLUMNS[:3] == ["city", "capture_date", "timezone"]
