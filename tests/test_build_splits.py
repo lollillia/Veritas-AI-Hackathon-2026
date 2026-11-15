@@ -189,3 +189,83 @@ def test_near_duplicates_with_different_labels_are_not_grouped(tmp_path):
     build(tmp_path)
     by = {Path(r["path"]).name: r for r in _manifest(tmp_path)}
     assert by["smooth_a.png"]["group_id"] != by["smooth_b.jpg"]["group_id"]
+
+
+def _v1_then_extra(tmp_path, n_extra=0):
+    make_repo(tmp_path)
+    _bulk(tmp_path, "data", "Healthy", 60, 1000)
+    _bulk(tmp_path, "rlnst/RL-NST", "Leaf_Blight", 40, 2000)
+    build(tmp_path)
+    if n_extra:
+        _bulk(tmp_path, "extra", "Healthy_Leaf", n_extra, 3000)
+    return {**SOURCES, "extra": "data/raw/extra"}
+
+
+def _build_v2(tmp_path, sources):
+    return build(tmp_path, sources, manifest_name="splits_v2.csv", dropped_name="splits_v2_dropped.csv",
+                 base_manifest=tmp_path / "data" / "splits.csv")
+
+
+def test_base_manifest_keeps_every_existing_split_even_when_groups_change(tmp_path):
+    sources = _v1_then_extra(tmp_path, n_extra=20)
+    # a new near-duplicate of a base image, under a different label, used to reshuffle strata
+    big = _structured(64)
+    _save(big, tmp_path / "data" / "raw" / "data" / "Blight" / "smooth.png")
+    build(tmp_path)                                         # refresh v1 with the smooth image
+    _save(big.resize((48, 48), Image.LANCZOS), tmp_path / "data" / "raw" / "extra" / "Healthy_Leaf" / "smooth_copy.jpg", quality=90)
+    before = {r["md5"]: r["split"] for r in read_manifest(tmp_path / "data" / "splits.csv")}
+    counts = _build_v2(tmp_path, sources)
+    after = {r["md5"]: r["split"] for r in read_manifest(tmp_path / "data" / "splits_v2.csv")}
+    assert all(after[m] == s for m, s in before.items())
+    assert counts["base_kept"] == len(before) and counts["base_missing"] == 0
+
+
+def test_new_image_linked_to_a_base_image_inherits_its_split(tmp_path):
+    sources = _v1_then_extra(tmp_path)
+    big = _structured(64)
+    _save(big, tmp_path / "data" / "raw" / "data" / "Healthy" / "pair_a.png")
+    build(tmp_path)
+    _save(big.resize((48, 48), Image.LANCZOS), tmp_path / "data" / "raw" / "extra" / "Healthy_Leaf" / "pair_b.jpg", quality=90)
+    counts = _build_v2(tmp_path, sources)
+    by = {Path(r["path"]).name: r for r in read_manifest(tmp_path / "data" / "splits_v2.csv")}
+    assert by["pair_b.jpg"]["split"] == by["pair_a.png"]["split"]
+    assert counts["new_linked_to_base"] == 1
+
+
+def test_exact_duplicate_of_a_base_image_keeps_the_base_copy(tmp_path):
+    make_repo(tmp_path)
+    build(tmp_path)
+    base_file = tmp_path / "data" / "raw" / "data" / "Healthy" / "a.png"
+    early = tmp_path / "data" / "raw" / "AAA" / "Healthy_Leaf" / "a_again.png"    # sorts before data/raw/data
+    early.parent.mkdir(parents=True)
+    early.write_bytes(base_file.read_bytes())
+    sources = {**SOURCES, "aaa": "data/raw/AAA"}
+    _build_v2(tmp_path, sources)
+    names = [Path(r["path"]).name for r in read_manifest(tmp_path / "data" / "splits_v2.csv")]
+    assert "a.png" in names and "a_again.png" not in names
+    with open(tmp_path / "data" / "splits_v2_dropped.csv", newline="") as f:
+        dropped = list(csv.DictReader(f))
+    assert [(Path(d["path"]).name, Path(d["duplicate_of"]).name) for d in dropped] == [("a_again.png", "a.png")]
+
+
+def test_new_images_are_split_about_80_10_10(tmp_path):
+    sources = _v1_then_extra(tmp_path, n_extra=100)
+    _build_v2(tmp_path, sources)
+    from collections import Counter
+    c = Counter(r["split"] for r in read_manifest(tmp_path / "data" / "splits_v2.csv") if r["source"] == "extra")
+    assert abs(c["train"] - 80) <= 2 and abs(c["dev"] - 10) <= 2 and abs(c["test"] - 10) <= 2
+
+
+def test_base_rows_missing_from_disk_are_counted(tmp_path):
+    sources = _v1_then_extra(tmp_path, n_extra=3)
+    (tmp_path / "data" / "raw" / "data" / "Healthy" / "img_0.png").unlink()
+    counts = _build_v2(tmp_path, sources)
+    assert counts["base_missing"] == 1
+
+
+def test_cli_parse_args_base():
+    from data_prep.build_splits import parse_args
+
+    args = parse_args(["--base", "data/splits.csv", "--out", "data/splits_v2.csv"])
+    assert str(args.base) == "data/splits.csv"
+    assert parse_args([]).base is None

@@ -1,7 +1,7 @@
 """Build the pooled train/dev/test manifest.
 
     python -m data_prep.build_splits
-    python -m data_prep.build_splits --add NAME=PATH [--add ...] --out data/splits_v2.csv
+    python -m data_prep.build_splits --add NAME=PATH [--add ...] --base data/splits.csv --out data/splits_v2.csv
 
 Scans the raw datasets, drops exact duplicates and unreadable files (recording them), groups
 near-duplicate images, assigns splits, and writes data/splits.csv and data/splits_dropped.csv.
@@ -13,7 +13,7 @@ from collections import Counter
 from pathlib import Path
 
 from data_prep.grouping import dhash, group_ids
-from data_prep.manifest import write_dropped, write_manifest
+from data_prep.manifest import read_manifest, write_dropped, write_manifest
 from data_prep.splitting import assign_splits
 from train.labels import folder_to_label
 
@@ -47,16 +47,26 @@ def scan_source(name: str, root: Path, repo_root: Path) -> list[dict]:
 
 
 def build(repo_root: Path, sources: dict[str, str] = SOURCES, out_dir: Path | None = None,
-          manifest_name: str = "splits.csv", dropped_name: str = "splits_dropped.csv") -> dict:
+          manifest_name: str = "splits.csv", dropped_name: str = "splits_dropped.csv",
+          base_manifest: Path | None = None) -> dict:
+    """Scan, de-duplicate, group and split; write the manifest and the dropped list.
+
+    With base_manifest (an earlier splits.csv), every image already in it keeps its split
+    (append-only): exact duplicates prefer the base copy, a new image grouped with a base
+    image takes that image's split, and only the remaining new images are split 80/10/10.
+    """
     repo_root = Path(repo_root)
     out_dir = Path(out_dir) if out_dir else repo_root / "data"
+    base_rows = read_manifest(base_manifest) if base_manifest else []
+    base_split = {r["md5"]: r["split"] for r in base_rows}
+    base_paths = {r["path"] for r in base_rows}
 
     candidates = []
     for name in sorted(sources):
         candidates += scan_source(name, repo_root / sources[name], repo_root)
-    candidates.sort(key=lambda r: r["path"])
+    candidates.sort(key=lambda r: (r["path"] not in base_paths, r["path"]))   # base copies win ties
 
-    kept, hashes, dropped = [], [], []
+    kept, dropped = [], []
     seen: dict[str, str] = {}                      # md5 -> path of the kept file
     for row in candidates:
         full = repo_root / row["path"]
@@ -70,13 +80,42 @@ def build(repo_root: Path, sources: dict[str, str] = SOURCES, out_dir: Path | No
             dropped.append({"path": row["path"], "md5": md5, "reason": "duplicate", "duplicate_of": seen[md5]})
             continue
         seen[md5] = row["path"]
-        kept.append({**row, "md5": md5})
-        hashes.append(h)
+        kept.append({**row, "md5": md5, "_hash": h})
+    kept.sort(key=lambda r: r["path"])
+    dropped.sort(key=lambda d: d["path"])
 
-    for row, gid in zip(kept, group_ids(hashes, keys=[r["label"] for r in kept])):
+    for row, gid in zip(kept, group_ids([r.pop("_hash") for r in kept], keys=[r["label"] for r in kept])):
         row["group_id"] = gid
-    for row, split in zip(kept, assign_splits(kept)):
-        row["split"] = split
+
+    extra: dict = {}
+    if base_rows:
+        group_split: dict[int, str] = {}
+        conflicts = 0
+        for row in kept:
+            if row["md5"] in base_split:
+                first = group_split.setdefault(row["group_id"], base_split[row["md5"]])
+                conflicts += first != base_split[row["md5"]]
+        fresh = [r for r in kept if r["md5"] not in base_split and r["group_id"] not in group_split]
+        for row, split in zip(fresh, assign_splits(fresh)):
+            row["split"] = split
+        linked = 0
+        for row in kept:
+            if row["md5"] in base_split:
+                row["split"] = base_split[row["md5"]]
+            elif row["group_id"] in group_split:
+                row["split"] = group_split[row["group_id"]]
+                linked += 1
+        kept_md5 = {r["md5"] for r in kept}
+        extra = {
+            "base_kept": sum(r["md5"] in base_split for r in kept),
+            "base_missing": sum(m not in kept_md5 for m in base_split),
+            "new_images": sum(r["md5"] not in base_split for r in kept),
+            "new_linked_to_base": linked,
+            "groups_with_conflicting_base_splits": conflicts,
+        }
+    else:
+        for row, split in zip(kept, assign_splits(kept)):
+            row["split"] = split
 
     write_manifest(kept, out_dir / manifest_name)
     write_dropped(dropped, out_dir / dropped_name)
@@ -92,6 +131,7 @@ def build(repo_root: Path, sources: dict[str, str] = SOURCES, out_dir: Path | No
         "dropped": dict(Counter(d["reason"] for d in dropped)),
         "multi_image_group_images": sum(n for n in sizes.values() if n > 1),
         "largest_group": max(sizes.values(), default=0),
+        **extra,
     }
 
 
@@ -101,6 +141,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                         help="extra source folder, relative to the repo root (repeatable)")
     parser.add_argument("--out", default=Path("data/splits.csv"), type=Path,
                         help="manifest to write; the dropped list goes beside it as <name>_dropped.csv")
+    parser.add_argument("--base", type=Path, default=None,
+                        help="earlier manifest whose images keep their split (append-only)")
     args = parser.parse_args(argv)
     extra = {}
     for item in args.add:
@@ -116,7 +158,8 @@ def main() -> None:
     args = parse_args()
     root = Path.cwd()
     counts = build(root, {**SOURCES, **args.add}, out_dir=root / args.out.parent,
-                   manifest_name=args.out.name, dropped_name=f"{args.out.stem}_dropped.csv")
+                   manifest_name=args.out.name, dropped_name=f"{args.out.stem}_dropped.csv",
+                   base_manifest=args.base)
     for key, value in counts.items():
         print(f"{key}: {value}")
     print(f"wrote {args.out} and {args.out.parent / (args.out.stem + '_dropped.csv')}", file=sys.stderr)
