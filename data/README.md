@@ -73,7 +73,7 @@ Notes:
 | **`splits_v4.csv`** | **15,217** | v3 plus `mendeley_bd` and `neau`, append-only (no v3 image moved), **fungal labels**. Newest manifest; `models/corn_fungal` is trained on it |
 | `splits_dropped.csv`, `splits_v2_dropped.csv`, `splits_v3_dropped.csv`, `splits_v4_dropped.csv` | 2 / 28 / 34 / 638 | images left out of each manifest and why (exact duplicate, unreadable) |
 | `image_metadata.json` | 11 datasets | index linking each dataset's `raw/<folder>/image_metadata.csv` (committed): per image — label, capture date, GPS (rounded to ~110 m), camera, documented site and city. 8 datasets / 16,460 images are in v5; 3 more (`23669328`, `china_2`, `xtu502`; 3,497 images) are marked `"in_manifest": false`. `data_prep.image_metadata.read_metadata()` returns the v5 rows; pass `include_unused=True` for all |
-| `weather.csv` | 56 | weather summaries (7 days, 1, 3 and 6 months before capture) per distinct (city, capture date); join on `city` + `capture_date` |
+| `weather.csv` | 71 | weather summaries (7 days, 1, 3 and 6 months before capture) per distinct (city, capture date); join on `city` + `capture_date`. 57 rows are for v5 photos; 14 are `china_2` rows, built with `python -m data_prep.weather --include-unused`. **9 of those `china_2` rows (dated 2023-12-06) are unreliable:** all 499 of `china_2`'s 2023 photos carry that one EXIF date across 8 provinces, including rust in December, so it is probably a processing date. `23669328` is left out: most of its leaves were scanned Jan–Apr in Iowa, so they were likely grown indoors. `xtu502` has no dates |
 
 ## Other folders
 

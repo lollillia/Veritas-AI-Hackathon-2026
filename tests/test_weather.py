@@ -77,3 +77,45 @@ def test_window_names():
 def test_output_has_no_city_coordinates():
     assert "city_lat" not in COLUMNS and "city_lon" not in COLUMNS
     assert COLUMNS[:3] == ["city", "capture_date", "timezone"]
+
+
+def _index_with_unused(tmp_path):
+    import csv
+
+    from data_prep.image_metadata import COLUMNS as META_COLUMNS, write_index
+    for folder, gps in (("cds", ("40.1", "-86.9")), ("china_2", ("37.6", "116.8"))):
+        d = tmp_path / "data" / "raw" / folder
+        d.mkdir(parents=True)
+        with open(d / "image_metadata.csv", "w", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=META_COLUMNS); w.writeheader()
+            w.writerow({c: "" for c in META_COLUMNS} | {"path": f"data/raw/{folder}/a.jpg", "md5": folder, "source": folder,
+                        "capture_date": "2022-08-01", "gps_lat": gps[0], "gps_lon": gps[1],
+                        "city": f"city {float(gps[0])}"})
+    index = tmp_path / "data" / "image_metadata.json"
+    write_index(tmp_path, {"cds": 1}, index, "m.csv", unused={"china_2": 1})
+    return index
+
+
+def _run_main(monkeypatch, tmp_path, *extra):
+    import csv
+
+    import data_prep.locations as locations
+    import data_prep.weather as weather
+    monkeypatch.setattr(locations, "reverse_city",
+                        lambda lat, lon, cache: {"city": f"city {lat}", "city_lat": lat, "city_lon": lon})
+    def fake_fetch(lat, lon, start, end, cache):
+        first = date.fromisoformat(start)
+        return {"timezone": "UTC", "daily": _daily(first, (date.fromisoformat(end) - first).days + 1)}
+    monkeypatch.setattr(weather, "fetch_range", fake_fetch)
+    out = tmp_path / "weather.csv"
+    weather.main(["--metadata", str(_index_with_unused(tmp_path)), "--out", str(out), *extra])
+    with open(out, newline="") as f:
+        return sorted(r["city"] for r in csv.DictReader(f))
+
+
+def test_main_uses_only_manifest_datasets_by_default(monkeypatch, tmp_path):
+    assert _run_main(monkeypatch, tmp_path) == ["city 40.1"]
+
+
+def test_main_include_unused_adds_unused_datasets(monkeypatch, tmp_path):
+    assert _run_main(monkeypatch, tmp_path, "--include-unused") == ["city 37.6", "city 40.1"]

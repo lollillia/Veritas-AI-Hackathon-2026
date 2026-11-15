@@ -1,8 +1,9 @@
 """Weather leading up to each photo: summaries for the last 7 days, 1 month, 3 months and 6 months.
 
-    python -m data_prep.weather [--metadata data/image_metadata.json] [--out data/weather.csv]
+    python -m data_prep.weather [--metadata data/image_metadata.json] [--out data/weather.csv] [--include-unused]
 
-One row per distinct (city, capture date) in the image metadata (data/image_metadata.json). The city comes from the photo's
+One row per distinct (city, capture date) in the image metadata (data/image_metadata.json); by default only
+the manifest's datasets, with --include-unused also those marked "in_manifest": false. The city comes from the photo's
 GPS or, failing that, its documented dataset site (see data_prep.locations); weather is queried at
 the city's centre point. Each window covers the N days ending the day before the capture date, so
 the capture day itself is not included. Source: Open-Meteo historical weather archive (ERA5
@@ -120,20 +121,22 @@ def weather_rows(keys: list[dict], fetch) -> list[dict]:
     return out
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--metadata", default=Path("data/image_metadata.json"), type=Path)
     parser.add_argument("--out", default=Path("data/weather.csv"), type=Path)
     parser.add_argument("--cache", default=Path("data/raw/weather_cache"), type=Path)
-    args = parser.parse_args()
+    parser.add_argument("--include-unused", action="store_true",
+                        help='also datasets marked "in_manifest": false in the index')
+    args = parser.parse_args(argv)
+    from data_prep import locations
     from data_prep.image_metadata import locate_city
-    from data_prep.locations import reverse_city
 
     geocode_cache = Path("data/raw/geocode_cache")
-    resolve = lambda lat, lon: reverse_city(lat, lon, geocode_cache)        # cached by image_metadata
+    resolve = lambda lat, lon: locations.reverse_city(lat, lon, geocode_cache)        # cached by image_metadata
     from data_prep.image_metadata import read_metadata
 
-    keys = weather_keys(read_metadata(args.metadata),
+    keys = weather_keys(read_metadata(args.metadata, include_unused=args.include_unused),
                         lambda r: locate_city(r["gps_lat"], r["gps_lon"], r["site"], resolve))
     rows = weather_rows(keys, lambda lat, lon, s, e: fetch_range(lat, lon, s, e, args.cache))
     with open(args.out, "w", newline="") as f:
