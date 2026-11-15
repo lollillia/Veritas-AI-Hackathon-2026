@@ -19,6 +19,9 @@ own `README.md` with per-class counts.
 | `Final corn dataset` | [Mendeley vy629dngm8](https://data.mendeley.com/datasets/vy629dngm8/1) "Seasonal Corn Leaf Disease Dataset" | 2,943 (2,060 unique) | Healthy, Gray_leaf_spot, Common_rust | Gurudaspur, Natore, Bangladesh; Dec 2022 – Feb 2024 | CC BY 4.0 | used in v4 (2,060); 604 internal duplicate files dropped; bacterial streak and chlorotic mottle virus not used |
 | `Northeast Agricultural University` | folder from the user (details in its `README.txt`) | 856 | healthy maize leaves, maize northern leaf blight, maize northern anthracnose (eyespot) | Harbin, China; Jul–Aug 2021 | unknown | used in v4 (856) |
 | `yusuf_corn` | [Kaggle yusufmurtaza01/corn-leaf-diseases](https://www.kaggle.com/datasets/yusufmurtaza01/corn-leaf-diseases) | 4,027 | — | — | not checked | not used: 3,992 images duplicate `data` |
+| `china_2` | folder from the user with `desc.json` (a Chinese description per image). Probably the CAAS image–text corn disease dataset ([*Journal of Agricultural Big Data* 2025](https://opaj.napstic.cn/periodicalArticle/0120251000190036)); unconfirmed | 1,655 (965 new) | `data/` by code: NLB, CR, SLB, SCR (southern rust), GLS, SUM (dwarf mosaic), CBS (brown spot), CLS (Curvularia), NLS | new images: Shandong, Gansu, Henan, Guizhou, Yunnan, Anhui (China), 2014–2023 | unknown | not used; GLS, NLB and NLS (690) are byte-identical CD&S copies |
+| `23669328` | [Iowa State figshare 23669328](https://iastate.figshare.com/articles/dataset/Images_and_annotations_of_em_Puccinia_sorghi_em_infected_maize_leaves/23669328) (source `isu_rust`) | 1,309 | scanned leaf strips (TIFF) with pustule outlines; 1,033 with pustules (common_rust) | Ames, Iowa, USA; 2018–2021 | CC BY-NC 4.0 | not used: scanner style would be a shortcut for common rust |
+| `xtu502` | [GitHub xtu502/maize-disease-identification](https://github.com/xtu502/maize-disease-identification), test images of Mobile-DANet ([Chen et al. 2021](https://doi.org/10.1111/ppa.13322)) | 533 | `36_Pub_Maize` (4 classes × 100); `33_Col_Maize` (133: gray leaf spot, eyespot, Phaeosphaeria leaf spot, southern rust, smut, ear rot, crazy top, Goss's wilt) | web/field photos, mostly no EXIF | none stated | not used; all 400 `36_Pub_Maize` and 12 `33_Col_Maize` images are copies of `data` |
 
 ## Diseases in the raw images
 
@@ -45,6 +48,19 @@ Notes:
   merged into `eyespot`. The dataset's README does not name the pathogen.
 - `northern_leaf_spot` comes from a single dataset (CD&S) and `eyespot` from two small ones, so a model
   may partly learn those datasets' look instead of the disease.
+
+**Fungal diseases only in unused datasets** (`china_2`, `xtu502`). Their `image_metadata.csv` already uses these descriptive labels, ready if the classes are added:
+
+| Disease | Cause | New images | Datasets | Label |
+|---|---|---|---|---|
+| Southern rust | *Puccinia polysora* | 212 (195 + 17) | `china_2`, `xtu502` | `southern_rust` |
+| Southern leaf blight | *Bipolaris maydis* | 200 | `china_2` | `southern_leaf_blight` |
+| Brown spot | *Physoderma maydis* | 115 | `china_2` | `brown_spot` |
+| Curvularia leaf spot | *Curvularia lunata* | 105 | `china_2` | `curvularia_leaf_spot` |
+
+`xtu502` also adds 17 eyespot and 11 Phaeosphaeria leaf spot photos from other sources. `china_2` adds 220 common rust photos from China.
+
+**Label problem in `data` (Kaggle):** `xtu502` holds resized copies of a few Kaggle photos under different labels. 3 photos in Kaggle's `Blight` folder are gray leaf spot (one Iowa State photo clearly so), 2 are Goss's wilt, and 4 of Kaggle's `Common_Rust` photos are labelled southern rust in `xtu502`. These photos are in the v5 training splits.
 
 ## Generated files (`data/`)
 
