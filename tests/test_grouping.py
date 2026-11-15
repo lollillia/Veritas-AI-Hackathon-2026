@@ -115,3 +115,9 @@ def test_merge_partitions_unions_both_groupings():
 
     assert merge_partitions([0, 0, 1, 2, 3], [0, 1, 1, 2, 3]) == [0, 0, 0, 1, 2]
     assert merge_partitions([], []) == []
+
+
+def test_group_ids_allow_callback_can_veto_links():
+    allow = lambda i, j: (i, j) != (0, 1)
+    assert group_ids([0, 0, 255], allow=allow) == [0, 1, 2]       # the only close pair (0, 1) is vetoed
+    assert group_ids([0, 0, 255]) == [0, 0, 1]

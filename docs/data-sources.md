@@ -9,6 +9,7 @@ Two manifests exist:
 | File | Images | What it is |
 |---|---|---|
 | `data/splits.csv` (v1) | 8,643 | `kaggle`, `rlnst`, `cds`, split 6,914 / 865 / 864. The model in `models/corn` was trained on its train split |
+| `data/splits_v3.csv` (v3) | 12,301 | v2 plus `ndisan` (2,994 phone photos), built append-only with `--base data/splits_v2.csv`: all 9,307 v2 images keep their split; the new images are split 2,436 / 284 / 274 with each leaf's repeated shots kept together |
 | `data/splits_v2.csv` (v2) | 9,307 | v1 plus `maize_multiformat`, built **append-only** with `--base data/splits.csv`: all 8,643 v1 images keep their v1 split; the 664 new images are split 525 / 67 / 72 (groups of burst shots stay together, so not exactly 80/10/10) |
 
 The images are not in the repository (`data/raw/` is gitignored). **Do not regenerate
@@ -18,9 +19,11 @@ about 560 images between splits. The builder refuses to overwrite an existing fi
 
 ## Photo metadata
 
-`data/image_metadata.csv` lists, for every image in `data/splits_v2.csv`, the capture date and time, GPS
-location (rounded to 3 decimals, about 110 m) and camera taken from the image's embedded EXIF data.
-Blank means the image carries none. Regenerate with `python -m data_prep.image_metadata`.
+`data/image_metadata.csv` lists, for every image in the newest manifest, the capture date and time, GPS
+location (rounded to 3 decimals, about 110 m) and camera taken from the image's embedded EXIF data, plus a
+`site` column with the dataset-level collection site where the source documents one. Blank means unknown.
+It now covers every image in `data/splits_v3.csv`. Regenerate with
+`python -m data_prep.image_metadata --manifest data/splits_v3.csv`.
 
 | Source | Images | With capture date | With GPS | Notes |
 |---|---|---|---|---|
@@ -28,6 +31,7 @@ Blank means the image carries none. Regenerate with `python -m data_prep.image_m
 | `kaggle` | 4,186 | 157 | 25 | the rest stripped (3 more carry empty GPS placeholders); the few located ones are mostly Nebraska, two in Kenya |
 | `rlnst` | 2,886 | none | none | |
 | `maize_multiformat` | 664 | none | none | stripped even in `RAW_Image`; the 6 unreadable HEIC originals were not checked |
+| `ndisan` | 2,994 | all | none (empty placeholders) | vivo V2029, 11 days from 11 Apr to 30 Jul 2023; `site` from the dataset page; the camera clock may be off (EXIF times 05–08 and 15–17 vs the page's 12:00–14:00 WIB) |
 
 ## Sources used
 
@@ -39,7 +43,9 @@ Blank means the image carries none. Regenerate with `python -m data_prep.image_m
 
 | `maize_multiformat` | "An Open-Source Multi-Format Maize Leaf Image Dataset": full-resolution phone photos (mostly 3024×4032), 7 classes, many burst shots of the same leaf | Folder supplied by the user at `data/raw/An Open-Source Multi-Format Maize Leaf Image Datas/`; publisher not identified. **Only `RAW_Image/` is used** (see below) | 664 (v2 only) | unknown |
 
-Totals: 8,643 images in v1, 9,307 in v2.
+| `ndisan` | Kaggle "Corn Leaf Disease" (`ndisan/corn-leaf-disease`): 3120×4160 phone photos of single leaves on white paper, 5 shots per leaf. **Only `Daun Sehat`, `Hawar Daun`, `Karat Daun` are used** | https://www.kaggle.com/datasets/ndisan/corn-leaf-disease, downloaded by the user into `data/raw/kaggle_corn_leaf_disease`. Collected in Polagan Village, Sampang Regency, Madura, East Java, Indonesia (per the page) | 2,994 (v3 only) | MIT (per the page) |
+
+Totals: 8,643 images in v1, 9,307 in v2, 12,301 in v3.
 
 ### What was left out of `maize_multiformat`
 
@@ -66,12 +72,12 @@ Folder names are mapped to labels in `train/labels.py`.
 | Kaggle `Blight`, RL-NST `Leaf_Blight`, CD&S `nlb` | `leaf_blight` | assumed to be northern corn leaf blight; RL-NST confirmed by the user and cross-checked with a model and Claude |
 | Kaggle `Gray_Leaf_Spot`, RL-NST `Leaf_spot`, CD&S `gls` and `nls` | `leaf_spot` | gray and northern leaf spot merged on purpose; RL-NST `Leaf_spot` as gray leaf spot confirmed by the user, cross-checked (weakly) |
 | `maize_multiformat` `Healthy_Leaf`, `Common_Rust`, `Corn_Leaf_Blight`, `Gray_Leaf_Spot` | `healthy`, `common_rust`, `leaf_blight`, `leaf_spot` | folder name; "Corn Leaf Blight" assumed to be a leaf blight |
+| `ndisan` `Daun Sehat`, `Hawar Daun`, `Karat Daun` | `healthy`, `leaf_blight`, `common_rust` | Indonesian folder names; the dataset page lists healthy, leaf blight, leaf spot and leaf rust ("karat" assumed to be common rust) |
+| `ndisan` `Bercak Daun` | not used | copies and 180° rotations of Kaggle `smaranjitghose` images already in `kaggle` |
 | `maize_multiformat` `Eyespot` | `leaf_spot` | user decision: eyespot (Kabatiella) counts as a leaf spot |
 | RL-NST `Streak_virus`, `maize_multiformat` `Maize_Streak_Disease`, `Bacterial_Leaf_Streak` | not used | excluded on purpose, and unmapped so they can never be trained on |
 
-## Downloaded but not yet in a manifest
-
-### `data/raw/kaggle_corn_leaf_disease` — Kaggle `ndisan/corn-leaf-disease`
+## Notes on `ndisan` (`data/raw/kaggle_corn_leaf_disease`)
 
 - **Source:** https://www.kaggle.com/datasets/ndisan/corn-leaf-disease (confirmed by the user; folder names, file names, 4,000 images and 5.49 GB total all match). License on the page: MIT. The authors ask to be credited in academic use.
 - **Where:** per the page, "a corn field with an area of approximately 10 hectares owned by the Department of Agriculture in Polagan Village, Sampang District" (Sampang Regency, Madura, East Java, Indonesia). The photos carry no usable GPS (placeholder tags only).
@@ -79,7 +85,7 @@ Folder names are mapped to labels in `train/labels.py`.
 - **When:** EXIF capture dates on 11 days between 11 April and 30 July 2023. The page says shooting was at 12:00–14:00 WIB, but EXIF times are 05:00–08:00 and 15:00–17:00, so the camera clock is probably not reliable.
 - **Folders (Indonesian):** `Daun Sehat` healthy, `Hawar Daun` leaf blight, `Karat Daun` leaf rust (the 3,000 phone photos, 1,000 each), and `Bercak Daun` leaf spot.
 - **Do not use `Bercak Daun`:** the page says the data was combined with the Kaggle `smaranjitghose` corn dataset; 574 of these files are byte-identical to images already in our `kaggle` source and most of the rest are those images rotated 180° (`augmented_…`), which near-duplicate grouping cannot catch.
-- **If added:** group the 5 shots of each leaf (consecutive filename timestamps, e.g. `IMG_20230728_171448`) so they stay in one split; files ending in ` (1)` are likely copies.
+- **Repeated shots:** the 5 shots of each leaf are grouped by their filename timestamps (`IMG_20230728_171448`): shots within 20 seconds of the previous one in the same folder form one group, so they stay in one split. Files ending in ` (1)` are not copies; every file has its own timestamp (the suffix comes from merging folders). 6 exact duplicate files were dropped.
 
 ## Looked at and not used
 
@@ -96,6 +102,7 @@ Folder names are mapped to labels in `train/labels.py`.
 ## Known data issues
 
 - **Two images carry conflicting labels.** The Kaggle dataset has two exact duplicate files that sit in both the `Blight` and the `Gray_Leaf_Spot` folders (`Corn_Blight (77).jpg` / `Corn_Gray_Spot (19).jpg`, and `Corn_Blight (1104).jpg` / `Corn_Gray_Spot (564).jpg`). The builder keeps the copy that sorts first (the Blight one) and records the other in `splits_dropped.csv`. One of the two labels is wrong.
+- **Grouping rules changed over time.** v1 linked any images whose 64-bit difference hashes were within 4 bits; later builds link only images with the same label whose pixels also correlate at 0.95 or more (plain leaves with similar framing produced huge false groups, which dropped 1,256 new photos in a first v3 attempt), and add groups of repeated shots by filename timestamp. Because of this, a fresh rebuild of v2 gives the same splits but different `group_id` values, and future fresh builds no longer group repeated shots of the same leaf in datasets without timestamps (`maize_multiformat`, `rlnst`). The committed manifests are kept as they are and new data is always added with `--base`.
 - **Near-duplicates are only linked within one label.** Smooth photos of different classes can have close hashes; without this rule a 10-photo healthy burst was chained to leaf-spot images. v1 was built before this rule and contains three small cross-label groups; it was left unchanged because the model in `models/corn` was trained on it.
 - **Near-duplicate grouping is narrow.** Images are grouped when their 64-bit difference hashes are within 4 bits, which catches near-identical files (43 images fall in such groups, the largest of size 3). It does not catch rotated, flipped or cropped copies of the same photo, nor photos of the same leaf or plant taken separately. Leakage between splits through such copies cannot be ruled out.
 - **CD&S photos come from one field campaign**, so photos of the same plants can sit in different splits.
@@ -104,5 +111,5 @@ Folder names are mapped to labels in `train/labels.py`.
 ## Rebuilding
 
 1. Download the three sources into the locations in the table above.
-2. To add a source without moving any existing image, build a new file on top of the newest manifest (about a minute): `python -m data_prep.build_splits --add "maize_multiformat=data/raw/An Open-Source Multi-Format Maize Leaf Image Datas/maize (corn) leaf images/RAW_Image" --base data/splits.csv --out data/splits_v2.csv`. v2 rebuilt this way reproduces byte-for-byte. A completely fresh split (new file name, seed 0) is `python -m data_prep.build_splits --out data/splits_new.csv`; models trained on another manifest cannot be scored on it.
+2. To add a source without moving any existing image, build a new file on top of the newest manifest (about a minute): `python -m data_prep.build_splits --add "maize_multiformat=data/raw/An Open-Source Multi-Format Maize Leaf Image Datas/maize (corn) leaf images/RAW_Image" --base data/splits.csv --out data/splits_v2.csv`. (A rebuild with the current builder reproduces v2's splits but not its `group_id` values; see Known data issues.) A completely fresh split (new file name, seed 0) is `python -m data_prep.build_splits --out data/splits_new.csv`; models trained on another manifest cannot be scored on it.
 3. `python -m train.train --manifest data/splits.csv --out models/corn --epochs 5`, then `python -m train.evaluate --manifest data/splits.csv --model models/corn --split dev` (or `test`).

@@ -14,7 +14,7 @@ from datetime import datetime
 from collections import Counter
 from pathlib import Path
 
-from data_prep.grouping import burst_group_ids, dhash, group_ids, merge_partitions
+from data_prep.grouping import burst_group_ids, dhash, group_ids, merge_partitions, thumb_vector
 from data_prep.manifest import read_manifest, write_dropped, write_manifest
 from data_prep.splitting import assign_splits
 from train.labels import folder_to_label
@@ -27,6 +27,10 @@ SOURCES: dict[str, str] = {
 # Shots whose phone-style file names (IMG_YYYYMMDD_HHMMSS) are this close are treated as the same
 # leaf: the ndisan dataset photographs each leaf 5 times in a row.
 BURST_WINDOW_S = 20
+# Look-alike (hash) matches must be confirmed by pixel correlation: plain leaves with similar framing can
+# have close hashes and chain into huge false groups (real copies, even resized, score about 0.99).
+# Repeated shots of one leaf are grouped by filename timestamps instead (BURST_WINDOW_S).
+LOOK_ALIKE_MIN_CORRELATION = 0.95
 _PHONE_NAME = re.compile(r"IMG_(\d{8})_(\d{6})")
 # .heic is scanned only so unreadable phone photos show up in the dropped list.
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".heic"}
@@ -101,7 +105,15 @@ def build(repo_root: Path, sources: dict[str, str] = SOURCES, out_dir: Path | No
     kept.sort(key=lambda r: r["path"])
     dropped.sort(key=lambda d: d["path"])
 
-    look_alike = group_ids([r.pop("_hash") for r in kept], keys=[r["label"] for r in kept])
+    thumbs: dict[int, object] = {}
+
+    def confirmed(i: int, j: int) -> bool:
+        for k in (i, j):
+            if k not in thumbs:
+                thumbs[k] = thumb_vector(repo_root / kept[k]["path"])
+        return float(thumbs[i] @ thumbs[j]) >= LOOK_ALIKE_MIN_CORRELATION
+
+    look_alike = group_ids([r.pop("_hash") for r in kept], keys=[r["label"] for r in kept], allow=confirmed)
     bursts = burst_group_ids([filename_time(Path(r["path"]).name) for r in kept],
                              [(r["source"], r["original_folder"], r["label"]) for r in kept], BURST_WINDOW_S)
     for row, gid in zip(kept, merge_partitions(look_alike, bursts)):

@@ -289,30 +289,33 @@ def test_cli_refuses_to_overwrite_an_existing_manifest(tmp_path, monkeypatch):
 
 
 def test_new_image_bridging_base_images_in_different_splits_is_left_out(tmp_path, monkeypatch):
+    import hashlib
+
     import data_prep.build_splits as bs
+    from data_prep.manifest import write_manifest
 
     make_repo(tmp_path)
-    _bulk(tmp_path, "data", "Healthy", 30, 4000)
-    build(tmp_path)
-    rows = read_manifest(tmp_path / "data" / "splits.csv")
-    healthy = [r for r in rows if r["label"] == "healthy"]
-    a = next(r for r in healthy if r["split"] == "train")
-    b = next(r for r in healthy if r["split"] != "train")
-    _save(_noise(9999), tmp_path / "data" / "raw" / "extra" / "Healthy_Leaf" / "bridge.png")
+    folder = tmp_path / "data" / "raw" / "data" / "Healthy"
+    base_img = _structured(64)
+    _save(base_img, folder / "a.png")                                     # three near-identical pictures
+    _save(base_img.resize((60, 60), Image.LANCZOS), folder / "b.png")
+    _save(base_img.resize((62, 62), Image.LANCZOS), folder / "bridge.png")
+    md5 = lambda p: hashlib.md5(p.read_bytes()).hexdigest()
+    base_rows = [{"path": f"data/raw/data/Healthy/{n}", "md5": md5(folder / n), "source": "kaggle",
+                  "original_folder": "Healthy", "label": "healthy", "group_id": i, "split": s}
+                 for i, (n, s) in enumerate([("a.png", "train"), ("b.png", "test")])]
+    write_manifest(base_rows, tmp_path / "data" / "base.csv")
     real = bs.dhash
-    fake = {a["path"]: 0, b["path"]: 0xFF, "data/raw/extra/Healthy_Leaf/bridge.png": 0x0F}   # a~c, c~b, a-b 8 bits
-    def stub(path):
-        rel = Path(path).relative_to(tmp_path).as_posix()
-        return fake.get(rel, real(path) | (1 << 63))       # keep everything else far from the stubbed hashes
-    monkeypatch.setattr(bs, "dhash", stub)
-    counts = _build_v2(tmp_path, {**SOURCES, "extra": "data/raw/extra"})
-    names = [Path(r["path"]).name for r in read_manifest(tmp_path / "data" / "splits_v2.csv")]
-    assert "bridge.png" not in names
-    with open(tmp_path / "data" / "splits_v2_dropped.csv", newline="") as f:
+    fake = {"a.png": 0, "b.png": 0xFF, "bridge.png": 0x0F}                # a~bridge, bridge~b, a-b 8 bits
+    monkeypatch.setattr(bs, "dhash", lambda p: fake.get(Path(p).name, real(p) | (1 << 63)))
+    counts = build(tmp_path, manifest_name="v2.csv", dropped_name="v2_dropped.csv",
+                   base_manifest=tmp_path / "data" / "base.csv")
+    names = [Path(r["path"]).name for r in read_manifest(tmp_path / "data" / "v2.csv")]
+    assert "bridge.png" not in names and "a.png" in names and "b.png" in names
+    with open(tmp_path / "data" / "v2_dropped.csv", newline="") as f:
         dropped = {Path(d["path"]).name: d["reason"] for d in csv.DictReader(f)}
     assert dropped["bridge.png"] == "bridges_base_splits"
     assert counts["new_dropped_bridging"] == 1
-
 
 def test_filename_time_parses_phone_names_only():
     from datetime import datetime
@@ -335,3 +338,31 @@ def test_shots_seconds_apart_share_a_group_and_split_even_if_they_look_different
     a, b, c = by["IMG_20230728_171448.jpg"], by["IMG_20230728_171500.jpg"], by["IMG_20230728_171600.jpg"]
     assert a["group_id"] == b["group_id"] and a["split"] == b["split"]
     assert c["group_id"] != a["group_id"]
+
+
+def test_look_alikes_need_pixel_confirmation_within_and_across_sources(tmp_path, monkeypatch):
+    import data_prep.build_splits as bs
+
+    make_repo(tmp_path)
+    a = tmp_path / "data" / "raw" / "data" / "Healthy" / "lookalike_a.png"
+    b = tmp_path / "data" / "raw" / "rlnst" / "RL-NST" / "Healthy" / "lookalike_b.png"
+    c = tmp_path / "data" / "raw" / "data" / "Healthy" / "lookalike_c.png"
+    _save(_noise(8001), a); _save(_noise(8002), b); _save(_noise(8003), c)      # different pictures
+    real = bs.dhash
+    def stub(path):
+        return 12345 if Path(path).name.startswith("lookalike_") else real(path) | (1 << 63)
+    monkeypatch.setattr(bs, "dhash", stub)                                       # all three "look alike"
+    build(tmp_path)
+    by = {Path(r["path"]).name: r for r in _manifest(tmp_path)}
+    assert by["lookalike_a.png"]["group_id"] != by["lookalike_c.png"]["group_id"]   # same source: not confirmed either
+    assert by["lookalike_b.png"]["group_id"] != by["lookalike_a.png"]["group_id"]   # other source: not confirmed
+
+
+def test_cross_source_resized_copy_is_still_grouped(tmp_path):
+    make_repo(tmp_path)
+    big = _structured(64)
+    _save(big, tmp_path / "data" / "raw" / "data" / "Healthy" / "copy_a.png")
+    _save(big.resize((48, 48), Image.LANCZOS), tmp_path / "data" / "raw" / "rlnst" / "RL-NST" / "Healthy" / "copy_b.jpg", quality=90)
+    build(tmp_path)
+    by = {Path(r["path"]).name: r for r in _manifest(tmp_path)}
+    assert by["copy_a.png"]["group_id"] == by["copy_b.jpg"]["group_id"]

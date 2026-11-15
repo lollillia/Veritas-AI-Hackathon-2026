@@ -25,6 +25,14 @@ def dhash(path: Path | str) -> int:
     return value
 
 
+def thumb_vector(path: Path | str, size: int = 32) -> np.ndarray:
+    """Grayscale thumbnail, normalised so the dot product of two vectors is their pixel correlation."""
+    with Image.open(path) as img:
+        img.draft("L", (size * 4, size * 4))
+        a = np.asarray(img.convert("L").resize((size, size), Image.BILINEAR), dtype=np.float32)
+    return ((a - a.mean()) / (a.std() + 1e-6)).ravel() / size
+
+
 def _popcount(x: np.ndarray) -> np.ndarray:
     x = x - ((x >> np.uint64(1)) & _M1)
     x = (x & _M2) + ((x >> np.uint64(2)) & _M2)
@@ -32,12 +40,13 @@ def _popcount(x: np.ndarray) -> np.ndarray:
     return (x * _H01) >> np.uint64(56)
 
 
-def group_ids(hashes: list[int], threshold: int = 4, keys: list | None = None) -> list[int]:
+def group_ids(hashes: list[int], threshold: int = 4, keys: list | None = None, allow=None) -> list[int]:
     """Group hashes whose Hamming distance is <= threshold (connected components).
 
     With keys (e.g. labels), two hashes are only linked when their keys are equal: smooth,
     low-texture photos of different classes can have close hashes, and chaining would
-    otherwise merge them. Returns one id per input, numbered from 0 in order of first appearance.
+    otherwise merge them. allow(i, j), if given, can veto a candidate link (e.g. require pixel
+    confirmation). Returns one id per input, numbered from 0 in order of first appearance.
     """
     n = len(hashes)
     if keys is not None and len(keys) != n:
@@ -60,7 +69,7 @@ def group_ids(hashes: list[int], threshold: int = 4, keys: list | None = None) -
         rows, cols = np.nonzero(dist <= threshold)
         for r, c in zip(rows.tolist(), cols.tolist()):
             i = start + r
-            if c > i and (keys is None or keys[i] == keys[c]):
+            if c > i and (keys is None or keys[i] == keys[c]) and (allow is None or allow(i, c)):
                 ri, rc = find(i), find(c)
                 if ri != rc:
                     parent[max(ri, rc)] = min(ri, rc)
