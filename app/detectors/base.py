@@ -8,6 +8,7 @@ LABELS: tuple[str, ...] = (
     "gray_leaf_spot",  # Cercospora zeae-maydis
     "northern_leaf_spot",  # Bipolaris zeicola
     "eyespot",  # Kabatiella zeae (includes "northern anthracnose")
+    "phaeosphaeria_leaf_spot",  # Phaeosphaeria maydis
     "not_corn_leaf",
 )
 

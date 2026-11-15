@@ -28,6 +28,9 @@ from train.labels import folder_to_label
         # Northeast Agricultural University; anthracnose merged into eyespot (user decision)
         ("healthy maize leaves", "healthy"), ("maize northern leaf blight", "northern_leaf_blight"),
         ("maize northern anthracnose", "eyespot"),
+        # University of Pretoria "Diseases of maize in the field" (one-hot CSV columns)
+        ("GLS", "gray_leaf_spot"), ("NCLB", "northern_leaf_blight"), ("PLS", "phaeosphaeria_leaf_spot"),
+        ("CR", "common_rust"), ("NoFoliarSymptoms", "healthy"), ("Phaeosphaeria_Leaf_Spot", "phaeosphaeria_leaf_spot"),
     ],
 )
 def test_folder_names_map_to_fungal_disease_labels(folder, label):
@@ -41,7 +44,9 @@ def test_folder_names_map_to_fungal_disease_labels(folder, label):
      "Streak_virus", "Maize_Streak_Disease", "Bacterial_Leaf_Streak", "Bacterial Leaf Streak",
      "Maize Chlorotic Mottle Virus",
      # copies and rotations of the Kaggle corn set
-     "Bercak Daun"],
+     "Bercak Daun",
+     # University of Pretoria columns without a label: southern rust (too few), other, unknown
+     "SR", "Other", "UnidentifiedDisease"],
 )
 def test_other_crops_non_fungal_diseases_and_copies_are_ignored(folder):
     assert folder_to_label(folder) is None

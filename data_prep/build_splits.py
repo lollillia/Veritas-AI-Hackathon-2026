@@ -16,6 +16,7 @@ from pathlib import Path
 
 from data_prep.grouping import burst_group_ids, dhash, group_ids, merge_partitions, thumb_vector
 from data_prep.manifest import read_manifest, write_dropped, write_manifest
+from data_prep.onehot_source import scan_onehot_csv
 from data_prep.splitting import assign_splits
 from train.labels import folder_to_label
 
@@ -69,7 +70,7 @@ def scan_source(name: str, root: Path, repo_root: Path) -> list[dict]:
 
 def build(repo_root: Path, sources: dict[str, str] = SOURCES, out_dir: Path | None = None,
           manifest_name: str = "splits.csv", dropped_name: str = "splits_dropped.csv",
-          base_manifest: Path | None = None) -> dict:
+          base_manifest: Path | None = None, onehot_sources: dict | None = None) -> dict:
     """Scan, de-duplicate, group and split; write the manifest and the dropped list.
 
     With base_manifest (an earlier splits.csv), every image already in it keeps its split
@@ -85,6 +86,10 @@ def build(repo_root: Path, sources: dict[str, str] = SOURCES, out_dir: Path | No
     candidates = []
     for name in sorted(sources):
         candidates += scan_source(name, repo_root / sources[name], repo_root)
+    onehot_skipped = {}
+    for name, (csv_path, image_dir) in sorted((onehot_sources or {}).items()):
+        rows, onehot_skipped[name] = scan_onehot_csv(name, repo_root / csv_path, repo_root / image_dir, repo_root)
+        candidates += rows
     candidates.sort(key=lambda r: (r["path"] not in base_paths, r["path"]))   # base copies win ties
 
     kept, dropped = [], []
@@ -172,6 +177,7 @@ def build(repo_root: Path, sources: dict[str, str] = SOURCES, out_dir: Path | No
         "dropped": dict(Counter(d["reason"] for d in dropped)),
         "multi_image_group_images": sum(n for n in sizes.values() if n > 1),
         "largest_group": max(sizes.values(), default=0),
+        **({"onehot_skipped": onehot_skipped} if onehot_skipped else {}),
         **extra,
     }
 
@@ -182,6 +188,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                         help="extra source folder, relative to the repo root (repeatable)")
     parser.add_argument("--out", default=Path("data/splits.csv"), type=Path,
                         help="manifest to write; the dropped list goes beside it as <name>_dropped.csv")
+    parser.add_argument("--add-onehot", action="append", default=[], metavar="NAME=CSV,IMAGE_DIR",
+                        help="extra source labelled by a one-hot CSV (repeatable)")
     parser.add_argument("--force", action="store_true",
                         help="overwrite --out if it already exists")
     parser.add_argument("--base", type=Path, default=None,
@@ -194,6 +202,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             parser.error(f"--add expects NAME=PATH, got '{item}'")
         extra[name] = path
     args.add = extra
+    onehot = {}
+    for item in args.add_onehot:
+        name, sep, rest = item.partition("=")
+        csv_path, comma, image_dir = rest.partition(",")
+        if not (sep and name and comma and csv_path and image_dir):
+            parser.error(f"--add-onehot expects NAME=CSV,IMAGE_DIR, got '{item}'")
+        onehot[name] = (csv_path, image_dir)
+    args.add_onehot = onehot
     return args
 
 
@@ -207,7 +223,7 @@ def main(argv: list[str] | None = None) -> None:
             f"to overwrite anyway pass --force.")
     counts = build(root, {**SOURCES, **args.add}, out_dir=root / args.out.parent,
                    manifest_name=args.out.name, dropped_name=f"{args.out.stem}_dropped.csv",
-                   base_manifest=args.base)
+                   base_manifest=args.base, onehot_sources=args.add_onehot)
     for key, value in counts.items():
         print(f"{key}: {value}")
     print(f"wrote {args.out} and {args.out.parent / (args.out.stem + '_dropped.csv')}", file=sys.stderr)

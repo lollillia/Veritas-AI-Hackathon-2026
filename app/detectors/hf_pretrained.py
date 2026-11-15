@@ -12,6 +12,7 @@ NOTES: dict[str, str] = {
     "gray_leaf_spot": "Narrow, rectangular tan to gray lesions run parallel to the leaf veins.",
     "northern_leaf_spot": "Small oval to oblong tan lesions, often with darker borders, are scattered across the leaf.",
     "eyespot": "Many small round spots with pale centres and dark rings, often with yellow halos, dot the leaf.",
+    "phaeosphaeria_leaf_spot": "Small pale green to bleached, round or oval spots with dark brown borders are scattered on the leaf.",
     "not_corn_leaf": "This image does not appear to show a corn leaf.",
 }
 

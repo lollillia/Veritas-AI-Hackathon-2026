@@ -366,3 +366,26 @@ def test_cross_source_resized_copy_is_still_grouped(tmp_path):
     build(tmp_path)
     by = {Path(r["path"]).name: r for r in _manifest(tmp_path)}
     assert by["copy_a.png"]["group_id"] == by["copy_b.jpg"]["group_id"]
+
+
+def test_build_includes_one_hot_csv_sources(tmp_path):
+    make_repo(tmp_path)
+    up = tmp_path / "data" / "raw" / "up"
+    (up / "leaf_images").mkdir(parents=True)
+    _save(_noise(9101), up / "leaf_images" / "x.JPG", format="JPEG")
+    _save(_noise(9102), up / "leaf_images" / "y.JPG", format="JPEG")
+    (up / "Database.csv").write_text("imgID_id,filePath,GLS,NCLB,PLS,CR,SR,NoFoliarSymptoms,Other,UnidentifiedDisease\n"
+                                     "1,x.JPG,0,0,1,0,0,0,0,0\n2,y.JPG,1,1,0,0,0,0,0,0\n")
+    counts = build(tmp_path, onehot_sources={"up": ("data/raw/up/Database.csv", "data/raw/up/leaf_images")})
+    by = {Path(r["path"]).name: r for r in _manifest(tmp_path)}
+    assert by["x.JPG"]["label"] == "phaeosphaeria_leaf_spot" and by["x.JPG"]["source"] == "up"
+    assert "y.JPG" not in by
+    assert counts["onehot_skipped"]["up"]["multi_label"] == 1
+
+
+def test_cli_parse_args_onehot():
+    from data_prep.build_splits import parse_args
+
+    args = parse_args(["--add-onehot", "up=data/raw/up/Database.csv,data/raw/up/leaf_images"])
+    assert args.add_onehot == {"up": ("data/raw/up/Database.csv", "data/raw/up/leaf_images")}
+    assert parse_args([]).add_onehot == {}

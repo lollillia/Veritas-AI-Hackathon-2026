@@ -1,6 +1,7 @@
 """Dataset folder name -> label. The study covers fungal leaf diseases only.
 
-Labels: healthy, common_rust, northern_leaf_blight, gray_leaf_spot, northern_leaf_spot, eyespot.
+Labels: healthy, common_rust, northern_leaf_blight, gray_leaf_spot, northern_leaf_spot, eyespot,
+phaeosphaeria_leaf_spot.
 Non-fungal classes (maize streak virus, maize chlorotic mottle virus, bacterial leaf streak) and the
 ndisan "Bercak Daun" folder (copies and rotations of the Kaggle corn set) are deliberately unmapped,
 so they are never trained on.
@@ -21,6 +22,11 @@ _BARE_CLASSES = {
     "northern_leaf_spot": "northern_leaf_spot", "nls": "northern_leaf_spot",
     # eyespot (Kabatiella zeae); "northern anthracnose" is merged into it (user decision)
     "eyespot": "eyespot", "northern_anthracnose": "eyespot",
+    # Phaeosphaeria leaf spot (Phaeosphaeria maydis)
+    "phaeosphaeria_leaf_spot": "phaeosphaeria_leaf_spot",
+    # University of Pretoria one-hot CSV columns (SR southern rust, Other, UnidentifiedDisease: not used)
+    "nclb": "northern_leaf_blight", "pls": "phaeosphaeria_leaf_spot", "cr": "common_rust",
+    "nofoliarsymptoms": "healthy",
 }
 
 

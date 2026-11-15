@@ -24,7 +24,8 @@ Classify it with exactly one of these labels:
 
 These are fungal diseases: "common_rust" (Puccinia sorghi), "northern_leaf_blight" (Exserohilum
 turcicum), "gray_leaf_spot" (Cercospora zeae-maydis), "northern_leaf_spot" (Bipolaris zeicola) and
-"eyespot" (Kabatiella zeae, also called northern anthracnose).
+"eyespot" (Kabatiella zeae, also called northern anthracnose) and "phaeosphaeria_leaf_spot"
+(Phaeosphaeria maydis).
 Use "not_corn_leaf" whenever the image is not a corn/maize leaf.
 Reply with JSON only, no other text, in this form:
 {{"label": "<one label>", "confidence": <number from 0 to 1>, "note": "<one short sentence describing what you see>"}}"""
