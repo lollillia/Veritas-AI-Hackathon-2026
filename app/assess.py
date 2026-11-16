@@ -14,7 +14,10 @@ SINGLE_ANSWER = "This model gives one answer only, so place and date weren't use
 
 def _about(knowledge, label):
     info = knowledge.get(label)
-    return {"title": info.name, "text": info.about, "sources": list(info.sources)} if info else None
+    if not info:
+        return None
+    links = [u for u in info.sources if u.startswith(("http://", "https://"))]   # notes files are not openable
+    return {"title": info.name, "text": info.about, "sources": links}
 
 
 def assess(detector, knowledge, image_bytes: bytes, place_query: PlaceQuery, photo_date: date | None,

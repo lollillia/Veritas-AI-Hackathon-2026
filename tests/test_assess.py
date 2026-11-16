@@ -107,3 +107,13 @@ def test_not_sure_uses_final_confidence():
     low = Result("gray_leaf_spot", 0.4, "x", scores={"gray_leaf_spot": 0.4, "common_rust": 0.35, "healthy": 0.25})
     body2, _ = _run(result=low, query=PlaceQuery(), d=None)
     assert body2["not_sure"] is True
+
+
+def test_about_shows_only_web_links():
+    k = dict(K)
+    k["common_rust"] = DiseaseInfo("common_rust", "Common rust", "Puccinia sorghi", ABOUT,
+                                   [S, "notes/rust.md", "http://example.org/b"], {"US": ("common", S)},
+                                   [6, 7, 8], S, WeatherRule(16, 25, 80, None, S))
+    body = assess(Det(SCORED), k, b"img", PlaceQuery("Ames", "Iowa", "USA"), date(2025, 7, 18), 0.5,
+                  geocode=Calls().geocode, recent_weather=Calls().recent_weather)
+    assert body["about"]["sources"] == [S, "http://example.org/b"]
