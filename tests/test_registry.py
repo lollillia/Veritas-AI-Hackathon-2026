@@ -29,3 +29,13 @@ def test_label_set_is_healthy_plus_each_fungal_disease():
     assert LABELS == ("healthy", "common_rust", "northern_leaf_blight", "gray_leaf_spot", "northern_leaf_spot",
                       "eyespot", "phaeosphaeria_leaf_spot", "southern_rust", "southern_leaf_blight", "brown_spot",
                       "curvularia_leaf_spot", "not_corn_leaf")
+
+
+def test_result_scores_must_use_known_labels():
+    with pytest.raises(ValueError):
+        Result("healthy", 0.9, "x", scores={"made_up": 0.9})
+
+
+def test_result_scores_default_to_none_and_do_not_affect_equality():
+    assert Result("healthy", 0.9, "x").scores is None
+    assert Result("healthy", 0.9, "x", scores={"healthy": 0.9}) == Result("healthy", 0.9, "x")

@@ -34,7 +34,8 @@ class FakeInner(Detector):
 
     def predict(self, image_bytes):
         self.calls += 1
-        return Result("northern_leaf_blight", 0.97, "Long lesions.")
+        return Result("northern_leaf_blight", 0.97, "Long lesions.",
+                      scores={"northern_leaf_blight": 0.97, "gray_leaf_spot": 0.03})
 
 
 def _gated(text=None, exc=None):
@@ -107,3 +108,13 @@ def test_config_for_gated_needs_the_api_key_and_the_weights(tmp_path):
     p.write_text(p.read_text().replace(str(weights), str(tmp_path / "nope")))
     with pytest.raises(ConfigError, match="weights_path"):
         load_config(str(p), env={"ANTHROPIC_API_KEY": "k"})
+
+
+def test_corn_leaf_result_keeps_the_inner_scores():
+    det, _ = _gated('{"corn_leaf": true, "note": "A maize leaf."}')
+    assert det.predict(_img_bytes()).scores == {"northern_leaf_blight": 0.97, "gray_leaf_spot": 0.03}
+
+
+def test_not_corn_leaf_has_no_scores():
+    det, _ = _gated('{"corn_leaf": false, "note": "A cat."}')
+    assert det.predict(_img_bytes()).scores is None

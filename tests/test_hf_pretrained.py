@@ -9,15 +9,17 @@ from app.detectors.hf_pretrained import NOTES, HfPretrainedDetector
 
 
 class FakePipeline:
-    def __init__(self, id2label, answer=None, exc=None):
+    def __init__(self, id2label, answer=None, exc=None, answers=None):
         self.model = SimpleNamespace(config=SimpleNamespace(id2label=id2label))
         self.answer, self.exc, self.seen_modes = answer, exc, []
+        self.answers = answers if answers is not None else ([answer] if answer else [])
 
     def __call__(self, image, top_k=1):
         self.seen_modes.append(image.mode)
         if self.exc:
             raise self.exc
-        return [self.answer]
+        ranked = sorted(self.answers, key=lambda a: -a["score"])
+        return ranked if top_k is None else ranked[:top_k]
 
 
 def _bytes(mode="RGB", fmt="PNG"):
@@ -64,3 +66,11 @@ def test_pipeline_exception_becomes_detector_error():
 
 def test_note_is_nonempty_for_every_label():
     assert all(NOTES[label].strip() for label in LABELS)
+
+
+def test_predict_returns_a_score_for_every_label():
+    answers = [{"label": "healthy", "score": 0.2}, {"label": "common_rust", "score": 0.7}, {"label": "eyespot", "score": 0.1}]
+    pipe = FakePipeline({0: "healthy", 1: "common_rust", 2: "eyespot"}, answers=answers)
+    r = HfPretrainedDetector("m", pipeline=pipe).predict(_bytes())
+    assert r.label == "common_rust" and r.confidence == pytest.approx(0.7)
+    assert r.scores == pytest.approx({"common_rust": 0.7, "healthy": 0.2, "eyespot": 0.1})

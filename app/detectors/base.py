@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 LABELS: tuple[str, ...] = (
     "healthy",
@@ -26,12 +26,18 @@ class Result:
     label: str
     confidence: float
     note: str
+    # Probability per label, when the detector has them (used for place/time weighting). Not part of equality.
+    scores: dict[str, float] | None = field(default=None, compare=False)
 
     def __post_init__(self):
         if self.label not in LABELS:
             raise ValueError(f"unknown label '{self.label}'")
         if not 0.0 <= self.confidence <= 1.0:
             raise ValueError(f"confidence {self.confidence} outside 0-1")
+        if self.scores is not None:
+            bad = [k for k, v in self.scores.items() if k not in LABELS or not 0.0 <= v <= 1.0]
+            if bad:
+                raise ValueError(f"invalid scores for {bad}")
 
 
 class Detector(ABC):

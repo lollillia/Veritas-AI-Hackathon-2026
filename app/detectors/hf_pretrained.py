@@ -50,9 +50,13 @@ class HfPretrainedDetector(Detector):
         except ValueError as exc:
             raise DetectorError("That file is not a valid image.") from exc
         try:
-            top = self.pipeline(image, top_k=1)[0]
-            label = self.label_map.get(top["label"], top["label"])
-            return Result(label, min(max(float(top["score"]), 0.0), 1.0), NOTES[label])
+            ranked = sorted(self.pipeline(image, top_k=None), key=lambda a: -float(a["score"]))
+            scores: dict[str, float] = {}
+            for a in ranked:
+                mapped = self.label_map.get(a["label"], a["label"])
+                scores[mapped] = min(1.0, scores.get(mapped, 0.0) + max(float(a["score"]), 0.0))
+            label = max(scores, key=scores.get)
+            return Result(label, scores[label], NOTES[label], scores=scores)
         except Exception as exc:
             log.exception("hf pipeline failed")
             raise DetectorError("The model failed to analyse the image.") from exc
