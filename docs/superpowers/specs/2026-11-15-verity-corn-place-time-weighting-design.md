@@ -24,7 +24,8 @@ the result.
 - The page shows the final disease, a **spectrum** of % certainty per disease (e.g. 60% common rust, 30%
   northern leaf blight, 10% other), a short "why" line, and a fixed **About the disease** text per disease
   (user decision).
-- A new **playful, artsy** title and logo recreated from the user's sketch (user decision).
+- The user's **hand-drawn corn logo** (cut from their sketch) with a "Verity corn" wordmark in a playful typeface,
+  both lines straight (user decision).
 
 ## Non-goals
 
@@ -107,9 +108,10 @@ Layout follows the user's sketch: header (logo + "Verity corn" + tagline); uploa
 (city, state/region, country, ZIP) and time fields (day, month, year) right; then Result (disease name),
 spectrum bar, "why" line, About the disease.
 
-- **Logo and title**: recreated in a playful, artsy style: a cartoon corn cob with two leaves, one leaf
-  carrying three green check marks; "Verity" in green, "corn" in heavy black, a hand-lettered feel, as
-  inline SVG plus a Google Fonts display font.
+- **Logo and title**: the user's own corn drawing, cut from the sketch with a transparent background
+  (`static/corn-logo.png`; shown on a light backdrop in dark mode so its black outlines stay visible), next to
+  the wordmark "Verity" (green) over "corn" (heavy black) in a playful rounded Google Fonts face. Both lines
+  are straight, not tilted (user decision).
 - **Spectrum**: one horizontal bar split into coloured segments with labels and percentages; the top
   disease is emphasised. Below it, smaller text: "Photo alone: …" for comparison.
 - Place and date are **optional** but encouraged (a hint says they improve the answer). Dates in the
@@ -153,8 +155,8 @@ scores, the page shows the single answer at its confidence, no weighting, and a 
 ## Decided by the user
 
 Approach B; place fields (city, state/region, country); date fields (day, month, year); fetch recent
-weather; show a spectrum of certainty; fixed general "About" text per disease; recreate the title and
-logo in a playful artsy style; the sources list.
+weather; show a spectrum of certainty; fixed general "About" text per disease; use the user's corn drawing as
+the logo with a straight two-line "Verity corn" wordmark in a playful style; the sources list.
 
 ## My calls (adjustable)
 
@@ -164,5 +166,5 @@ and format; tropics rule.
 
 ## Left to the builder
 
-Exact fonts and colours; SVG details of the logo; wording of the "why" line; how weather thresholds are
+Exact fonts and colours; wording of the "why" line; how weather thresholds are
 encoded per disease (as long as each is sourced); cache locations.
