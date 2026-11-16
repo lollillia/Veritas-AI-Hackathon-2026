@@ -228,3 +228,9 @@ def test_page_shows_the_brand_and_footnote():
     assert "Verity" in html and "detecting fungal diseases in corn" in html and "corn-logo.png" in html
     assert ("Place names are sent to OpenStreetMap and rounded coordinates to Open-Meteo to look up the "
             "location and weather. Nothing is stored.") in html
+
+
+def test_page_fields_start_empty_without_example_text():
+    html = client_for().get("/").text
+    assert "placeholder=" not in html
+    assert '<option value=""></option>' in html          # month menu starts blank
