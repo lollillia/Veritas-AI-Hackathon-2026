@@ -106,6 +106,30 @@ python -m train.evaluate --manifest data/splits.csv --model models/corn --split 
 
 Folder names are mapped to labels by `train/labels.py`; unknown folders (for example `Streak_virus`) are ignored. The older `--data <folder>` mode of `train.train` still works but makes its own random split.
 
+## Retraining from the Hugging Face copy of the data
+
+The raw images are not in git (about 30 GB). They are stored as a private Hugging Face dataset. One script
+downloads them, trains a model, scores it and writes a report:
+
+```bash
+source .venv/bin/activate
+hf auth login                                        # once; needs a token that can read the dataset
+scripts/train_from_hf.sh YOUR_USERNAME/veritas-corn-raw corn_retrained
+```
+
+- It downloads the dataset into `data/raw` (it handles either the folder or a single `raw.zip`) and checks
+  that every image in `data/splits_v6.csv` is present. `CHECK_ONLY=1` stops there; `SKIP_DOWNLOAD=1` uses
+  images already on disk.
+- It trains MobileNetV2 with background augmentation (`EPOCHS=5` by default; `STD_AUGMENT=1` adds random
+  crop/flip/colour changes), about 40-80 minutes on an Apple-silicon Mac.
+- It scores the model on the test photos, runs the background-swap test and the place-and-date check, and
+  writes `models/<name>/REPORT.md`, compared with the website's current model, with a recommendation.
+- It never overwrites an existing model folder.
+
+**To enable the new model in the website**, follow the last section of the report. In short, set
+`finetuned.weights_path: models/<name>` in `config.yaml` (with `detector: finetuned`) and restart with
+`python -m uvicorn app.main:build_app --factory`. To go back, point `weights_path` at the previous folder.
+
 ## Adding another detector
 
 1. Add `app/detectors/<name>.py` with a class that subclasses `Detector` and implements `predict(image_bytes) -> Result`.
