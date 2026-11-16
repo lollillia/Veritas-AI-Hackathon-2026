@@ -12,8 +12,8 @@ Only *used* sources back a factor. Wikipedia is used only where no other readabl
 mainly for US states and a few countries; everything else is "unknown" (neutral, ×1.0).
 
 Diseases with **no temperature range** in `diseases.yaml`, because no readable source gave one: northern
-leaf spot (Cornell says only "warm weather"), Curvularia leaf spot (Kentucky says "warm, humid") and
-Phaeosphaeria leaf spot (cause still under study). Their weather factor is neutral.
+leaf spot (Cornell says only "warm weather") and Curvularia leaf spot (Kentucky says "warm, humid"). Their
+weather factor is neutral. Phaeosphaeria leaf spot's range comes from notes the user provided (below).
 
 ## General
 - https://www.vegetables.cornell.edu/pest-management/disease-factsheets/sweet-corn-diseases-and-control-measures/ (not read)
@@ -128,6 +128,7 @@ Phaeosphaeria leaf spot (cause still under study). Their weather factor is neutr
 - https://indianafieldcroppathology.com/foliar-disease-update-in-indiana-corn-and-soybean/ (not read)
 
 ### Phaeosphaeria leaf spot
+- notes/phaeosphaeria-leaf-spot.md (used: notes pasted by the user on 15 Nov 2026, kept verbatim; no original citations given. Source of the 14-20°C and humidity >60-70% conditions, flowering-to-grain-fill timing, and Brazil and Mexico as regions where it is most severe)
 - https://www.michiganfarmnews.com/about/news-media/msu-seeks-producer-assistance-emerging-corn-leaf-spot-disease-investigation (used: emerging in about 16 Michigan counties in 2026, similar reports from New York and Pennsylvania; cause unresolved)
 - https://www.apsnet.org/publications/plantdisease/2005/January/Pages/89_1_44.aspx (blocked: 403)
 - https://repository.cimmyt.org/server/api/core/bitstreams/d14102da-8e31-414e-ab2d-932f31292265/content (blocked: bot check)

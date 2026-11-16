@@ -14,7 +14,7 @@ from app.detectors.base import LABELS
 
 LEVELS = ("common", "occasional", "rare", "not_reported", "unknown")
 MIN_ABOUT_WORDS = 40
-_URL = re.compile(r"https?://\S+")
+_URL = re.compile(r"https?://\S+|notes/[\w.-]+\.md")   # web sources, or user-provided notes files
 
 
 @dataclass(frozen=True)

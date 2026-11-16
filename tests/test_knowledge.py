@@ -91,3 +91,17 @@ def test_real_knowledge_file_is_valid():
     from app.detectors.base import LABELS
     k = load_knowledge()
     assert set(k) == set(LABELS) - {"not_corn_leaf"}
+
+
+def test_a_listed_notes_file_counts_as_a_source(tmp_path):
+    notes = "notes/rust.md"
+    text = GOOD.replace(f"US-FL: {{level: rare, source: {SRC}}}", f"US-FL: {{level: rare, source: {notes}}}")
+    y, md = _files(tmp_path, text)
+    md.write_text(md.read_text() + f"\n- {notes} (user-provided notes)\n")
+    assert load_knowledge(y, md, labels=LABELS)["common_rust"].regions["US-FL"] == ("rare", notes)
+
+
+def test_an_unlisted_notes_file_is_reported(tmp_path):
+    text = GOOD.replace(f"US-FL: {{level: rare, source: {SRC}}}", "US-FL: {level: rare, source: notes/other.md}")
+    with pytest.raises(KnowledgeError, match="notes/other.md"):
+        load_knowledge(*_files(tmp_path, text), labels=LABELS)

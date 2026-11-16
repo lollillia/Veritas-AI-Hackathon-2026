@@ -211,21 +211,33 @@ eyespot:
 
 phaeosphaeria_leaf_spot:
   name: Phaeosphaeria leaf spot
-  pathogen: historically Phaeosphaeria maydis (fungus); the exact cause is still being studied
+  pathogen: traditionally Phaeosphaeria maydis (fungus); the exact cause is still debated
   about: >-
-    Phaeosphaeria leaf spot, also called maize white spot, makes small pale to bleached, round or oval
-    spots, often with a darker border; with a hand lens, tiny black fruiting bodies can be seen inside the
-    lesions. It has long been linked to the fungus Phaeosphaeria maydis, but recent work shows the exact
-    cause is still unresolved. In 2026 a similar leaf spot emerged in about 16 Michigan counties with
-    notable severity, with similar reports from New York and Pennsylvania, and Michigan State University is
-    investigating it. Little is known yet about the weather that favours it in the United States. Other
-    small leaf spots, such as eyespot, Curvularia leaf spot and gray leaf spot, can look similar.
+    Phaeosphaeria leaf spot, also called maize white spot, starts as small, pale green, water-soaked spots
+    on the lower leaves that grow into round to oval lesions about 0.3 to 2 cm across, with bleached white
+    to straw-coloured centres and a dark brown margin; tiny black fruiting bodies may be visible inside.
+    It has long been blamed on the fungus Phaeosphaeria maydis, but a bacterium (Pantoea ananatis) and
+    other fungi can cause the same symptoms. It prefers cool to moderate weather, about 14 to 20°C, with
+    humidity above 60 to 70%, frequent rain or heavy dew, and is most severe in high-elevation tropical
+    areas such as parts of Brazil, Mexico and East and Southern Africa. Damage peaks from flowering to
+    grain fill, with losses of 10% to over 60% in susceptible hybrids. In 2026 a similar leaf spot emerged
+    in about 16 Michigan counties, with reports from New York and Pennsylvania.
   sources:
+    - notes/phaeosphaeria-leaf-spot.md
     - https://www.michiganfarmnews.com/about/news-media/msu-seeks-producer-assistance-emerging-corn-leaf-spot-disease-investigation
   regions:
+    BR: {level: common, source: notes/phaeosphaeria-leaf-spot.md}
+    MX: {level: common, source: notes/phaeosphaeria-leaf-spot.md}
     US-MI: {level: occasional, source: https://www.michiganfarmnews.com/about/news-media/msu-seeks-producer-assistance-emerging-corn-leaf-spot-disease-investigation}
     US-NY: {level: occasional, source: https://www.michiganfarmnews.com/about/news-media/msu-seeks-producer-assistance-emerging-corn-leaf-spot-disease-investigation}
     US-PA: {level: occasional, source: https://www.michiganfarmnews.com/about/news-media/msu-seeks-producer-assistance-emerging-corn-leaf-spot-disease-investigation}
+  season:
+    months: [7, 8, 9]
+    source: notes/phaeosphaeria-leaf-spot.md
+  weather:
+    temp_c: [14, 20]
+    rh_min_pct: 70
+    source: notes/phaeosphaeria-leaf-spot.md
 
 brown_spot:
   name: Brown spot (Physoderma)
