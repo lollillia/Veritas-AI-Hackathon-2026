@@ -11,9 +11,9 @@ after reading on 15 Nov 2026:
 Only *used* sources back a factor. Wikipedia is used only where no other readable source on the list covered the fact: countries outside the US for gray leaf spot and northern leaf blight, and the temperature range for southern leaf blight (the USDA paper gives none). The sources are mostly about the United States, so region levels exist
 mainly for US states and a few countries; everything else is "unknown" (neutral, ×1.0).
 
-Diseases with **no temperature range** in `diseases.yaml`, because no readable source gave one: northern
-leaf spot (Cornell says only "warm weather") and Curvularia leaf spot (Kentucky says "warm, humid"). Their
-weather factor is neutral. Phaeosphaeria leaf spot's range comes from notes the user provided (below).
+The only disease with **no temperature range** in `diseases.yaml` is Curvularia leaf spot (Kentucky says
+only "warm, humid"), so its weather factor is neutral. Phaeosphaeria leaf spot's and northern leaf spot's
+ranges come from notes the user provided (listed under those diseases).
 
 ## General
 - https://www.vegetables.cornell.edu/pest-management/disease-factsheets/sweet-corn-diseases-and-control-measures/ (not read)
@@ -98,6 +98,7 @@ weather factor is neutral. Phaeosphaeria leaf spot's range comes from notes the 
 - https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/PPA-51-Curvularia-Leaf-Spot-of-Corn--Remediated.pdf (used: Curvularia leaf spot first US reports Louisiana 2017 and Kentucky 2018, important in China, warm humid, any growth stage; eyespot ~70°F, common in Michigan, Minnesota, Wisconsin, very rare in Kentucky)
 
 ### Northern leaf spot
+- notes/northern-leaf-spot-and-blight.md (used: notes pasted by the user on 15 Nov 2026, kept verbatim; they cite PMC4363367 and Cornell for leaf spot, Purdue BP-84 and University of Delaware for leaf blight. Source of northern leaf spot's 68-90°F humid conditions, its regions (New York, Pennsylvania, North Carolina, Sichuan) and the leaf blight yield-loss and alternate-host facts. Their leaf blight range of 64-84°F is a little wider than Purdue, Minnesota, Bayer and Crop Protection Network (64-80/81°F), so the narrower range is kept)
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC4363367/ (blocked: browser check)
 - https://cals.cornell.edu/field-crops/corn/diseases-of-corn/northern-corn-leaf-spot (used: pathogen, symptoms at silking or maturity, warm humid weather, no numbers)
 - https://www.udel.edu/academics/colleges/canr/cooperative-extension/fact-sheets/northern-corn-leaf-blight/ (not read; about northern leaf blight)

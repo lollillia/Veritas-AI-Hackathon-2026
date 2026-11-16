@@ -89,11 +89,13 @@ northern_leaf_blight:
     wind and rain splash. Moderate temperatures of 64 to 81°F (18 to 27°C) with 6 to 18 hours of leaf
     wetness favour it, so it follows long dews and overcast days, and in Indiana it is most often seen late
     in the season. It is important in the US Corn Belt and Ontario and in mid-altitude tropics of Africa,
-    Latin America, China and India. Look-alikes include Goss's wilt, Stewart's wilt, Diplodia leaf streak
-    and southern leaf blight.
+    Latin America, China and India. Losing leaf area at or above the ear leaf in the two weeks around
+    tasseling can cut yields by 30 to 50%. Sorghum and sudangrass also host the fungus. Look-alikes include
+    Goss's wilt, Stewart's wilt, Diplodia leaf streak and southern leaf blight.
   sources:
     - https://cropprotectionnetwork.org/encyclopedia/northern-corn-leaf-blight-of-corn
     - https://en.wikipedia.org/wiki/Northern_corn_leaf_blight
+    - notes/northern-leaf-spot-and-blight.md
     - https://www.extension.purdue.edu/extmedia/bp/bp-84-w.pdf
     - https://extension.umn.edu/agriculture/crop-production/corn/northern-corn-leaf-blight
     - https://www.cropscience.bayer.us/articles/channel/northern-corn-leaf-blight-identification-environment-and-management
@@ -167,18 +169,29 @@ northern_leaf_spot:
   name: Northern leaf spot
   pathogen: Bipolaris zeicola (fungus; also called Cochliobolus carbonum)
   about: >-
-    Northern corn leaf spot is caused by the fungus Bipolaris zeicola (Cochliobolus carbonum), which has
-    several races. Lesions are circular to oblong, tan to brown, 1/8 to 1/2 inch long, often lined up along
-    the leaf veins like a string of pearls. Symptoms usually show around silking or at maturity. Warm,
-    humid weather favours it. The fungus overwinters in crop residue, and spores can also blow in from
-    other fields, so it has become more common with no-till farming; crop rotation and tillage help, and
-    resistant hybrids are the most effective control. It can be confused with other leaf spots such as
-    gray leaf spot and southern leaf blight.
+    Northern corn leaf spot is caused by the fungus Bipolaris zeicola (Cochliobolus carbonum), which can
+    infect leaves, sheaths, husks and ears. Lesions start as small, round to oval, reddish-brown or tan
+    spots and become tan to greyish-tan with a dark border, 1/8 to 1/2 inch long, often lined up along the
+    veins like a string of pearls. It usually appears from silking to maturity. The fungus overwinters on
+    corn residue and its spores travel far on wind and rain splash in warm (68 to 90°F, 20 to 32°C), humid
+    weather, so it has become more common with no-till. Race 3 is the main threat in the US Northeast and
+    Appalachians (New York, Pennsylvania, North Carolina); race 1 is rare in US hybrids but still a problem
+    in parts of Sichuan, China. Resistant hybrids are the main defence, with rotation and tillage.
   sources:
     - https://cals.cornell.edu/field-crops/corn/diseases-of-corn/northern-corn-leaf-spot
+    - notes/northern-leaf-spot-and-blight.md
+  regions:
+    US-NY: {level: occasional, source: notes/northern-leaf-spot-and-blight.md}
+    US-PA: {level: occasional, source: notes/northern-leaf-spot-and-blight.md}
+    US-NC: {level: occasional, source: notes/northern-leaf-spot-and-blight.md}
+    CN-SC: {level: occasional, source: notes/northern-leaf-spot-and-blight.md}
   season:
     months: [7, 8, 9]
     source: https://cals.cornell.edu/field-crops/corn/diseases-of-corn/northern-corn-leaf-spot
+  weather:
+    temp_c: [20, 32]
+    rh_min_pct: 80
+    source: notes/northern-leaf-spot-and-blight.md
 
 eyespot:
   name: Eyespot

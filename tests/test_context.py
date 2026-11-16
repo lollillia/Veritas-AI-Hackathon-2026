@@ -88,3 +88,9 @@ def test_recent_weather_summarises_14_and_30_days(tmp_path):
 def test_recent_weather_returns_none_on_error(tmp_path):
     assert recent_weather(1.0, 2.0, date(2025, 7, 18), tmp_path, fetch=Fetch(exc=OSError("down")),
                           today=date(2026, 11, 15)) is None
+
+
+def test_geocode_asks_for_english_place_names(tmp_path):
+    f = Fetch([])
+    geocode(PlaceQuery("Chengdu", country="China"), tmp_path, fetch=f)
+    assert "accept-language=en" in f.urls[0]

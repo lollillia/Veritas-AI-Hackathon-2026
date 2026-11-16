@@ -54,12 +54,12 @@ def geocode(query: PlaceQuery, cache_dir: Path = Path("data/raw/app_cache/geocod
     text = query.text()
     if not text:
         return None
-    cache = Path(cache_dir) / f"{hashlib.sha1(text.lower().encode()).hexdigest()}.json"
+    cache = Path(cache_dir) / f"en_{hashlib.sha1(text.lower().encode()).hexdigest()}.json"
     try:
         if cache.is_file():
             hits = json.loads(cache.read_text())
         else:
-            url = f"{SEARCH}?{urllib.parse.urlencode({'q': text, 'format': 'jsonv2', 'addressdetails': 1, 'limit': 1})}"
+            url = f"{SEARCH}?{urllib.parse.urlencode({'q': text, 'format': 'jsonv2', 'addressdetails': 1, 'limit': 1, 'accept-language': 'en'})}"
             hits = (fetch or _http_json)(url)
             cache.parent.mkdir(parents=True, exist_ok=True)
             cache.write_text(json.dumps(hits))
