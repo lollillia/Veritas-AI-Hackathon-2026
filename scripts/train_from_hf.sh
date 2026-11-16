@@ -51,6 +51,12 @@ if [ "$SKIP_DOWNLOAD" != "1" ]; then
   fi
 fi
 
+# The folder data/raw/china_2 was renamed to data/raw/IDADP; uploads made before that still use the old name.
+if [ -d data/raw/china_2 ] && [ ! -e data/raw/IDADP ]; then
+  echo "Renaming data/raw/china_2 to data/raw/IDADP (folder renamed in the project)"
+  mv data/raw/china_2 data/raw/IDADP
+fi
+
 # 2. Check every image in the manifest is present ---------------------------------------------------------
 step "Checking the images listed in $MANIFEST"
 "$PY" - "$MANIFEST" <<'EOF'

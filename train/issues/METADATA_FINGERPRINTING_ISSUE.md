@@ -46,7 +46,7 @@ A judge or farmer uploading a photo gives us a new day, often a new place, and u
 - **Image-only models.** `train/train.py` uses pixels only. The weather branch exists only in the experiment script `train/fusion.py`.
 - **Date-held-out splits for any metadata experiment.** `data/splits_v3_by_date.csv` keeps every (city, day) in one set (`python -m data_prep.date_split`).
 - **The capture date is never an input**, even in the fusion experiment. Weather summaries are used instead, and they still fingerprint the day (above).
-- **Questionable metadata is flagged.** Examples are the `china_2` 2023-12-06 rows in `data/weather.csv` and `data/raw/china_2/README.md`, and the Iowa State dataset left out of the weather data. Datasets outside the manifest are excluded from weather by default (`python -m data_prep.weather`; `--include-unused` to add them).
+- **Questionable metadata is flagged.** Examples are the `china_2` 2023-12-06 rows in `data/weather.csv` and `data/raw/IDADP/README.md`, and the Iowa State dataset left out of the weather data. Datasets outside the manifest are excluded from weather by default (`python -m data_prep.weather`; `--include-unused` to add them).
 
 ## What would be needed to use metadata safely
 

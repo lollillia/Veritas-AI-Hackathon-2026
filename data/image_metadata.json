@@ -53,10 +53,10 @@
       "metadata": "raw/cds/image_metadata.csv"
     },
     {
-      "folder": "china_2",
+      "folder": "IDADP",
       "source": "china_2",
       "images": 1655,
-      "metadata": "raw/china_2/image_metadata.csv",
+      "metadata": "raw/IDADP/image_metadata.csv",
       "in_manifest": false
     },
     {
