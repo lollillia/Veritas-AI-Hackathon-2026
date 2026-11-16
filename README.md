@@ -6,24 +6,29 @@ The website is the same whichever model runs behind it. `config.yaml` picks one 
 
 | `detector:` | What it is | Needs |
 |---|---|---|
-| `gated` (current) | Claude checks "is this a corn leaf?", then our fine-tuned model names the disease. If Claude is unreachable, the fine-tuned model answers alone | `ANTHROPIC_API_KEY`, `requirements-ml.txt`, a trained model (`models/corn_fungal_v6`) |
+| `gated` | Claude checks "is this a corn leaf?", then our fine-tuned model names the disease. If Claude is unreachable, the fine-tuned model answers alone | `ANTHROPIC_API_KEY`, `requirements-ml.txt`, a trained model (`models/corn_fungal_v6_bgaug`, included in the repo) |
 | `llm_vision` | A vision LLM (Claude) via API | `ANTHROPIC_API_KEY`, internet |
 | `hf_pretrained` | A pretrained corn-disease model from Hugging Face | `requirements-ml.txt`, a `model_id` and `label_map` in config |
-| `finetuned` | Our own model trained with `train/train.py`, alone | `requirements-ml.txt`, a trained model (`models/corn_fungal_v6`) |
+| `finetuned` (current) | Our own model trained with `train/train.py`, alone. Needs no API keys; cannot answer "not a corn leaf" | `requirements-ml.txt`, a trained model (`models/corn_fungal_v6_bgaug`, included in the repo) |
 
 ## Setup
 
+Requires **Python 3.14**, the version this project is built and tested with (the code needs at least 3.10, but
+older versions are untested). Check with `python3.14 --version`; if it is missing, install it from
+[python.org](https://www.python.org/downloads/) or with `brew install python@3.14`.
+
 ```bash
-python3 -m venv .venv && source .venv/bin/activate
+python3.14 -m venv .venv && source .venv/bin/activate
+python --version                           # should print Python 3.14.x
 pip install -r requirements.txt            # web app + LLM backend
-pip install -r requirements-ml.txt         # only for hf_pretrained / finetuned / training
+pip install -r requirements-ml.txt         # the model (torch, transformers): needed by the default `finetuned` detector, `gated`, `hf_pretrained` and training
 ```
 
 ### Secrets
 
 Never put secrets in `config.yaml`; it only holds the *name* of an environment variable.
 
-- `ANTHROPIC_API_KEY`: key for the `gated` and `llm_vision` backends.
+- `ANTHROPIC_API_KEY`: key for the `gated` and `llm_vision` backends. Not needed with the default `finetuned` detector.
 - `HF_TOKEN`: only needed for private or gated Hugging Face models (public ones need none). `huggingface-cli login` also works.
 
 Either `export` them in your shell (or set them in the PyCharm run configuration), or copy `.env.example` to `.env` and fill it in. `.env` is gitignored.
@@ -78,7 +83,7 @@ Note: a corn-only classifier has no "not a corn leaf" class, so it relies on the
 
 ### Training your own (`finetuned`)
 
-The website uses `models/corn_fungal_v6` (gitignored), trained on `data/splits_v6.csv` with all 11 labels: 91.6% on 1,719 held-out test photos, but about 75% on hard field photos (details in `models/corn_fungal_v6/MODEL_PERFORMANCE.md`). It was trained on corn leaves only, so on its own (`detector: finetuned`) it can never answer "not a corn leaf": in a check, 33 of 41 non-corn photos got a confident disease at the 0.5 threshold. The `gated` detector fixes that. In a live check, Claude rejected 41 of 41 non-corn photos (including 19 bean leaves) and accepted 59 of 60 corn test photos, taking about 2 seconds per photo. A history of all models is in `train/summaries/`.
+The website uses `models/corn_fungal_v6_bgaug` (committed in the repo), trained on `data/splits_v6.csv` with all 11 labels and background augmentation: 91.3% on 1,719 held-out test photos, but about 74% on hard field photos (details in `models/corn_fungal_v6_bgaug/MODEL_PERFORMANCE.md`; comparison with other models in `models/MODEL_COMPARISON.md`). It was trained on corn leaves only, so on its own (`detector: finetuned`) it can never answer "not a corn leaf": in a check, 33 of 41 non-corn photos got a confident disease at the 0.5 threshold. The `gated` detector fixes that. In a live check, Claude rejected 41 of 41 non-corn photos (including 19 bean leaves) and accepted 59 of 60 corn test photos, taking about 2 seconds per photo. A history of all models is in `train/summaries/`.
 
 Data sources, licenses and label mapping are in `docs/data-sources.md`. Every image's source, label and train/dev/test split is recorded in `data/splits.csv` and `data/splits_v2.csv` (committed; the images themselves are not). Never regenerate these: they record what each model trained on; add data with `--base`.
 

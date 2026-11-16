@@ -1,4 +1,5 @@
-transformers
-torch
-datasets
-accelerate
+# The model (needed by the default `finetuned` detector) and training. Pinned to the tested set on Python 3.14.
+transformers==5.23.0
+torch==2.15.0
+datasets==5.2.0
+accelerate==1.15.0
