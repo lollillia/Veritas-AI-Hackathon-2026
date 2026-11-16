@@ -13,15 +13,15 @@ The website is the same whichever model runs behind it. `config.yaml` picks one 
 
 ## Setup
 
-Requires **Python 3.14**, the version this project is built and tested with (the code needs at least 3.10, but
-older versions are untested). Check with `python3.14 --version`; if it is missing, install it from
-[python.org](https://www.python.org/downloads/) or with `brew install python@3.14`.
+Requires **Python 3.12 or newer** (tested on 3.12 and 3.14). Check with `python3 --version`; if needed,
+install a newer Python from [python.org](https://www.python.org/downloads/) or with `brew install python@3.14`.
 
 ```bash
-python3.14 -m venv .venv && source .venv/bin/activate
-python --version                           # should print Python 3.14.x
-pip install -r requirements.txt            # web app + LLM backend
-pip install -r requirements-ml.txt         # the model (torch, transformers): needed by the default `finetuned` detector, `gated`, `hf_pretrained` and training
+python3 -m venv .venv && source .venv/bin/activate   # or python3.12 / python3.14 -m venv .venv
+python --version                           # should print Python 3.12 or newer
+python -m pip install -r requirements.txt            # web app + LLM backend
+python -m pip install -r requirements-ml.txt         # the model (torch, transformers): needed by the default `finetuned` detector, `gated`, `hf_pretrained` and training
+python -m pip install -r requirements-dev.txt        # only to run the tests (pytest, httpx; also installs requirements.txt)
 ```
 
 ### Secrets
@@ -35,12 +35,22 @@ Either `export` them in your shell (or set them in the PyCharm run configuration
 
 ## Run
 
+From the project folder, with the virtual environment active (`source .venv/bin/activate`):
+
 ```bash
-uvicorn app.main:build_app --factory --reload
+python -m uvicorn app.main:build_app --factory --reload
 # open http://127.0.0.1:8000
 ```
 
-If the config is wrong (unknown detector, missing key, missing weights), startup stops with a message naming the problem.
+Use `python -m uvicorn`, not plain `uvicorn`: it always runs with the active environment's Python, so it finds the
+installed packages. If the config is wrong (unknown detector, missing key, missing weights), startup stops with a
+message naming the problem.
+
+**`ModuleNotFoundError: No module named 'fastapi'` (or `transformers`)** means the Python running the app does not
+have the packages:
+1. Activate the environment in this terminal: `source .venv/bin/activate` (Windows: `.venv\Scripts\activate`).
+2. Install into it: `python -m pip install -r requirements.txt -r requirements-ml.txt`.
+3. Check: `python -c "import fastapi, transformers; print('ok')"`, then start with `python -m uvicorn ...` as above.
 
 ## Place, date and weather
 
@@ -88,7 +98,7 @@ The website uses `models/corn_fungal_v6_bgaug` (committed in the repo), trained 
 Data sources, licenses and label mapping are in `docs/data-sources.md`. Every image's source, label and train/dev/test split is recorded in `data/splits.csv` and `data/splits_v2.csv` (committed; the images themselves are not). Never regenerate these: they record what each model trained on; add data with `--base`.
 
 ```bash
-pip install -r requirements-ml.txt
+python -m pip install -r requirements-ml.txt
 python -m data_prep.build_splits --add NAME=PATH --base data/splits_v2.csv --out data/splits_v3.csv   # add a source; existing splits stay put
 python -m train.train --manifest data/splits.csv --out models/corn --epochs 5
 python -m train.evaluate --manifest data/splits.csv --model models/corn --split test
@@ -105,7 +115,7 @@ Folder names are mapped to labels by `train/labels.py`; unknown folders (for exa
 ## Tests
 
 ```bash
-pip install -r requirements-dev.txt
+python -m pip install -r requirements-dev.txt
 pytest
 ```
 

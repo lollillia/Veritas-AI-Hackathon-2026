@@ -1,3 +1,4 @@
 -r requirements.txt
-pytest
-httpx
+# Running the tests (pytest; httpx is needed by FastAPI's test client). Pinned to the tested set.
+pytest==9.2.0
+httpx==0.28.1
