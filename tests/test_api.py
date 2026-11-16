@@ -38,7 +38,8 @@ def client_for(detector=None, min_confidence=0.5):
 def test_predict_returns_result_json():
     r = _post(client_for(), _img())
     assert r.status_code == 200
-    assert r.json() == {
+    body = r.json()
+    assert {k: body[k] for k in ("label", "confidence", "note", "not_sure")} == {
         "label": "common_rust",
         "confidence": 0.9,
         "note": "Orange pustules.",
@@ -150,3 +151,66 @@ def test_index_page_has_a_display_name_for_every_label():
     for label in LABELS:
         # a whole key, not the tail of a longer one (leaf_blight vs northern_leaf_blight)
         assert re.search(rf"(?<![\w]){label}:", html), f"UI has no display name for {label}"
+
+
+# --- place and date ---------------------------------------------------------------------------------
+from datetime import date, timedelta
+
+from app.context.geocode import Place
+
+SCORED = Result("gray_leaf_spot", 0.5, "x", scores={"gray_leaf_spot": 0.5, "common_rust": 0.4, "healthy": 0.1})
+IOWA = Place("Ames, Story County, Iowa, United States", 42.03, -93.62, "US", "US-IA")
+WX = {"14d": {"temp_mean_c": 20.0, "rh_mean_pct": 90.0, "rainy_days": 8, "days": 14},
+      "30d": {"temp_mean_c": 20.0, "rh_mean_pct": 90.0, "rainy_days": 15, "days": 30}}
+
+
+def ctx_client(result=SCORED):
+    app = create_app(FakeDetector(result), 0.5, geocode=lambda q: IOWA, recent_weather=lambda lat, lon, d: WX)
+    return TestClient(app)
+
+
+def _post_ctx(client, **fields):
+    return client.post("/predict", files={"file": ("leaf.jpg", _img(), "image/jpeg")}, data=fields)
+
+
+def test_predict_with_place_and_date_returns_spectrum_and_about():
+    body = _post_ctx(ctx_client(), city="Ames", region="Iowa", country="USA", day="18", month="7", year="2025").json()
+    assert body["spectrum"] and body["about"]["title"] == "Gray leaf spot"      # real knowledge file
+    assert body["factors"]["common_rust"]["combined"] == 1.5 and body["factors"]["healthy"]["combined"] == 1.0
+    assert body["place"]["display_name"].startswith("Ames") and body["why"]
+
+
+def test_predict_without_place_or_date_still_works():
+    body = _post_ctx(ctx_client()).json()
+    assert body["label"] == "gray_leaf_spot" and body["spectrum"] == body["photo_spectrum"]
+
+
+def test_partial_date_is_rejected():
+    r = _post_ctx(ctx_client(), day="18", month="7")
+    assert r.status_code == 400 and "day, month and year" in r.json()["error"]
+
+
+def test_invalid_date_is_rejected():
+    r = _post_ctx(ctx_client(), day="31", month="2", year="2025")
+    assert r.status_code == 400 and "doesn't exist" in r.json()["error"]
+
+
+def test_future_date_is_rejected():
+    d = date.today() + timedelta(days=1)
+    r = _post_ctx(ctx_client(), day=str(d.day), month=str(d.month), year=str(d.year))
+    assert r.status_code == 400 and "future" in r.json()["error"]
+
+
+def test_today_is_accepted():
+    d = date.today()
+    assert _post_ctx(ctx_client(), day=str(d.day), month=str(d.month), year=str(d.year)).status_code == 200
+
+
+def test_date_before_1990_is_rejected():
+    r = _post_ctx(ctx_client(), day="1", month="1", year="1989")
+    assert r.status_code == 400 and "1990" in r.json()["error"]
+
+
+def test_logo_is_served():
+    r = client_for().get("/corn-logo.png")
+    assert r.status_code == 200 and r.headers["content-type"] == "image/png"
