@@ -102,3 +102,8 @@ def test_spectrum_top3_plus_other_sums_to_100():
 def test_spectrum_without_other_when_three_labels_cover_all():
     s = spectrum({"a": 0.333, "b": 0.333, "c": 0.334})
     assert [x["label"] for x in s] == ["c", "a", "b"] and sum(x["pct"] for x in s) == 100
+
+
+def test_spectrum_drops_entries_that_round_to_zero():
+    s = spectrum({"a": 0.999, "b": 0.0006, "c": 0.0004})
+    assert s == [{"label": "a", "pct": 100}]

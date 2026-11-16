@@ -119,4 +119,4 @@ def spectrum(probs: dict[str, float], top: int = 3) -> list[dict]:
     short = 100 - sum(pcts.values())
     for k, x in sorted(exact, key=lambda kx: -(kx[1] - int(kx[1])))[:short]:
         pcts[k] += 1
-    return [{"label": k, "pct": pcts[k]} for k, _ in parts if pcts[k] > 0 or k != "other"]
+    return [{"label": k, "pct": pcts[k]} for k, _ in parts if pcts[k] > 0]

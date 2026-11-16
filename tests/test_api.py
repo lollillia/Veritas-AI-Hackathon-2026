@@ -214,3 +214,17 @@ def test_date_before_1990_is_rejected():
 def test_logo_is_served():
     r = client_for().get("/corn-logo.png")
     assert r.status_code == 200 and r.headers["content-type"] == "image/png"
+
+
+def test_page_has_place_and_time_fields():
+    html = client_for().get("/").text
+    for el in ("photo", "city", "region", "country", "zip", "day", "month", "year", "check", "result",
+               "spectrum", "photo-spectrum", "why", "notices", "about"):
+        assert f'id="{el}"' in html, el
+
+
+def test_page_shows_the_brand_and_footnote():
+    html = client_for().get("/").text
+    assert "Verity" in html and "detecting fungal diseases in corn" in html and "corn-logo.png" in html
+    assert ("Place names are sent to OpenStreetMap and rounded coordinates to Open-Meteo to look up the "
+            "location and weather. Nothing is stored.") in html
