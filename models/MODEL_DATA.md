@@ -5,7 +5,8 @@ path, label and split (train / dev / test) is recorded in the committed manifest
 exact data can be rebuilt. Image files are not in git (`data/raw/` is about 30 GB).
 
 **One download for everything:** the whole `data/raw` folder (without the unused Iowa State scans) is stored as
-a private Hugging Face dataset; `scripts/train_from_hf.sh YOUR_USERNAME/veritas-corn-raw` downloads it. The
+a public Hugging Face dataset (https://huggingface.co/datasets/lollillia/veritas-corn-raw); `scripts/train_from_hf.sh`
+downloads it. The
 original sources are listed below for attribution and re-download.
 
 ## Models at a glance

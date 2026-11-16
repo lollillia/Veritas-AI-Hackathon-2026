@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Download the raw images from Hugging Face, train a model, evaluate it and write a report.
 #
-#   scripts/train_from_hf.sh HF_REPO [MODEL_NAME]
+#   scripts/train_from_hf.sh [HF_REPO] [MODEL_NAME]
 #
-#   HF_REPO      the Hugging Face dataset, e.g. your-name/veritas-corn-raw
+#   HF_REPO      the Hugging Face dataset (default: lollillia/veritas-corn-raw)
 #   MODEL_NAME   folder name under models/ (default: corn_retrained_YYYYMMDD)
 #
 # Options (environment variables):
@@ -14,11 +14,12 @@
 #   BASELINE=models/corn_fungal_v6_bgaug   the model to compare against (the website's current model)
 #   CHECK_ONLY=0      1 stops after downloading and checking the images (no training)
 #
-# Needs: the virtual environment with requirements.txt + requirements-ml.txt installed, and `hf auth login`
-# (or HF_TOKEN set) if the dataset is private. Training takes about 40-80 minutes on an Apple-silicon Mac.
+# Needs: the virtual environment with requirements.txt + requirements-ml.txt installed. The default dataset is
+# public, so no Hugging Face login is needed; for a private dataset, run `hf auth login` or set HF_TOKEN first.
+# Training takes about 40-80 minutes on an Apple-silicon Mac.
 set -euo pipefail
 
-HF_REPO="${1:-}"
+HF_REPO="${1:-lollillia/veritas-corn-raw}"
 NAME="${2:-corn_retrained_$(date +%Y%m%d)}"
 EPOCHS="${EPOCHS:-5}"
 STD_AUGMENT="${STD_AUGMENT:-0}"
@@ -32,6 +33,7 @@ if [ -n "${VIRTUAL_ENV:-}" ]; then PY=python; HF=hf; elif [ -x .venv/bin/python 
 OUT="models/$NAME"
 step() { printf '\n=== %s ===\n' "$*"; }
 
+
 if [ -e "$OUT/model.safetensors" ]; then
   echo "models/$NAME already exists; choose another MODEL_NAME so no trained model is overwritten." >&2
   exit 1
@@ -39,7 +41,6 @@ fi
 
 # 1. Download --------------------------------------------------------------------------------------------
 if [ "$SKIP_DOWNLOAD" != "1" ]; then
-  [ -n "$HF_REPO" ] || { echo "usage: scripts/train_from_hf.sh HF_REPO [MODEL_NAME]" >&2; exit 1; }
   step "Downloading $HF_REPO from Hugging Face"
   # The upload may be the data/raw folder itself or a single raw.zip; handle both.
   if "$PY" -c "import sys; from huggingface_hub import list_repo_files as f; sys.exit(0 if 'raw.zip' in f(sys.argv[1], repo_type='dataset') else 1)" "$HF_REPO"; then

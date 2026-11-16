@@ -108,14 +108,17 @@ Folder names are mapped to labels by `train/labels.py`; unknown folders (for exa
 
 ## Retraining from the Hugging Face copy of the data
 
-The raw images are not in git (about 30 GB). They are stored as a private Hugging Face dataset. One script
+The raw images are not in git (about 30 GB). They are stored as a public Hugging Face dataset (https://huggingface.co/datasets/lollillia/veritas-corn-raw). One script
 downloads them, trains a model, scores it and writes a report:
 
 ```bash
 source .venv/bin/activate
-hf auth login                                        # once; needs a token that can read the dataset
-scripts/train_from_hf.sh YOUR_USERNAME/veritas-corn-raw corn_retrained
+scripts/train_from_hf.sh                             # dataset lollillia/veritas-corn-raw, model models/corn_retrained_YYYYMMDD
+scripts/train_from_hf.sh lollillia/veritas-corn-raw corn_retrained   # or name them explicitly
 ```
+
+No Hugging Face login is needed: `lollillia/veritas-corn-raw` is a public dataset. For a private dataset, run
+`hf auth login` (or set `HF_TOKEN`) first.
 
 - It downloads the dataset into `data/raw` (it handles either the folder or a single `raw.zip`) and checks
   that every image in `data/splits_v6.csv` is present. `CHECK_ONLY=1` stops there; `SKIP_DOWNLOAD=1` uses
