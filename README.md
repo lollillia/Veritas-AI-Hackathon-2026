@@ -1,4 +1,4 @@
-# Veritas: Corn Leaf Disease Detector
+# Verity Corn: detecting fungal diseases in corn
 
 Upload a photo of a corn (maize) leaf and get one result: healthy or one of ten fungal diseases (common rust, southern rust, northern leaf blight, southern leaf blight, gray leaf spot, northern leaf spot, eyespot, Phaeosphaeria leaf spot, brown spot, Curvularia leaf spot), or "not a corn leaf", with a confidence and a one-line note. Built as a hackathon demo.
 
@@ -36,6 +36,31 @@ uvicorn app.main:build_app --factory --reload
 ```
 
 If the config is wrong (unknown detector, missing key, missing weights), startup stops with a message naming the problem.
+
+## Place, date and weather
+
+The page also asks where (city, state/region, country, optional ZIP) and when (day, month, year) the photo was
+taken. Both are optional.
+
+1. The place is looked up on OpenStreetMap, and the weather for the 14 and 30 days before the date on Open-Meteo.
+   Results are cached in `data/raw/app_cache/`; nothing else is stored.
+2. Each disease's photo percentage is multiplied by a region, season and weather factor from
+   `app/knowledge/diseases.yaml`. The factors are sourced, mild (×0.4–1.3 each) and capped at ×0.3–1.5 combined,
+   so a clear photo still wins. `healthy` is never changed.
+3. The page shows the final disease, a spectrum of the top diseases, the photo-only percentages, why the
+   numbers moved, and fixed "About the disease" text with its sources.
+
+The knowledge file was built from the user's source list (`app/knowledge/SOURCES.md` says which sources
+were read, blocked or skipped). Those sources are mostly about the United States, so region factors exist
+mainly for US states; elsewhere only season and weather apply. The facts come from outside sources, not
+from our photos, which avoids the fingerprinting problem in
+`train/issues/METADATA_FINGERPRINTING_ISSUE.md`.
+
+**Measured effect** (`python -m train.weighting_check`, `models/corn_fungal_v6_bgaug/weighting_check.md`):
+on 676 test photos with a real place and date, accuracy was 95.4% photo-only and 95.1% weighted. Weighting
+changed 4 answers: 1 to right, 3 to wrong. Most of those photos are from places the knowledge file says little
+about (Indonesia, Bangladesh, China), so the test says more about "does no harm" than about the benefit
+on US field photos. The factors were not tuned on this result.
 
 ## Switching models
 
