@@ -1,0 +1,104 @@
+{
+ "original": {
+  "all": [
+   309,
+   323
+  ],
+  "kaggle": [
+   101,
+   103
+  ],
+  "northern_leaf_blight": [
+   68,
+   72
+  ],
+  "common_rust": [
+   173,
+   181
+  ],
+  "gray_leaf_spot": [
+   12,
+   13
+  ],
+  "ndisan": [
+   154,
+   161
+  ],
+  "healthy": [
+   56,
+   57
+  ],
+  "rlnst": [
+   54,
+   59
+  ]
+ },
+ "flat": {
+  "all": [
+   299,
+   323
+  ],
+  "kaggle": [
+   98,
+   103
+  ],
+  "northern_leaf_blight": [
+   65,
+   72
+  ],
+  "common_rust": [
+   166,
+   181
+  ],
+  "gray_leaf_spot": [
+   11,
+   13
+  ],
+  "ndisan": [
+   148,
+   161
+  ],
+  "healthy": [
+   57,
+   57
+  ],
+  "rlnst": [
+   53,
+   59
+  ]
+ },
+ "field": {
+  "all": [
+   282,
+   323
+  ],
+  "kaggle": [
+   93,
+   103
+  ],
+  "northern_leaf_blight": [
+   65,
+   72
+  ],
+  "common_rust": [
+   149,
+   181
+  ],
+  "gray_leaf_spot": [
+   12,
+   13
+  ],
+  "ndisan": [
+   140,
+   161
+  ],
+  "healthy": [
+   56,
+   57
+  ],
+  "rlnst": [
+   49,
+   59
+  ]
+ }
+}

@@ -1,0 +1,6 @@
+W1115 17:25:07.948000 26497 .venv/lib/python3.14/site-packages/torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+Loading weights:   0%|          | 0/314 [00:00<?, ?it/s]Loading weights: 100%|██████████| 314/314 [00:00<00:00, 26461.95it/s]
+original 302/323 = 93.5%
+flat     298/323 = 92.3%
+field    285/323 = 88.2%
+field-background drop: -5.3% (323 photos, pool=unseen, 1175 field photos)

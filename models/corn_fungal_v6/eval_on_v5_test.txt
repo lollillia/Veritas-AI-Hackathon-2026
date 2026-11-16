@@ -1,0 +1,48 @@
+W1115 08:40:41.625000 23357 .venv/lib/python3.14/site-packages/torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+Loading weights:   0%|          | 0/314 [00:00<?, ?it/s]Loading weights: 100%|██████████| 314/314 [00:00<00:00, 25576.02it/s]
+## test split (1632 images, model models/corn_fungal_v6)
+
+- **Accuracy:** 91.9%
+- **Macro F1:** 85.2%
+
+| Class | Precision | Recall | F1 | Support |
+|---|---|---|---|---|
+| brown_spot | 0.0% | n/a | n/a | 0 |
+| common_rust | 93.5% | 94.2% | 93.9% | 382 |
+| curvularia_leaf_spot | 0.0% | n/a | n/a | 0 |
+| eyespot | 100.0% | 60.5% | 75.4% | 38 |
+| gray_leaf_spot | 86.2% | 90.6% | 88.3% | 351 |
+| healthy | 95.2% | 97.3% | 96.2% | 369 |
+| northern_leaf_blight | 93.6% | 90.1% | 91.8% | 425 |
+| northern_leaf_spot | 98.0% | 96.2% | 97.1% | 52 |
+| phaeosphaeria_leaf_spot | 63.6% | 46.7% | 53.8% | 15 |
+| southern_leaf_blight | 0.0% | n/a | n/a | 0 |
+| southern_rust | 0.0% | n/a | n/a | 0 |
+
+Confusion matrix (rows = true, columns = predicted)
+
+| true \ predicted | brown_spot | common_rust | curvularia_leaf_spot | eyespot | gray_leaf_spot | healthy | northern_leaf_blight | northern_leaf_spot | phaeosphaeria_leaf_spot | southern_leaf_blight | southern_rust |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **brown_spot** | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| **common_rust** | 1 | 360 | 1 | 0 | 5 | 4 | 8 | 0 | 2 | 0 | 1 |
+| **curvularia_leaf_spot** | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| **eyespot** | 0 | 12 | 0 | 23 | 1 | 1 | 0 | 1 | 0 | 0 | 0 |
+| **gray_leaf_spot** | 1 | 3 | 0 | 0 | 318 | 10 | 17 | 0 | 0 | 2 | 0 |
+| **healthy** | 0 | 2 | 0 | 0 | 5 | 359 | 1 | 0 | 2 | 0 | 0 |
+| **northern_leaf_blight** | 0 | 6 | 0 | 0 | 36 | 0 | 383 | 0 | 0 | 0 | 0 |
+| **northern_leaf_spot** | 0 | 0 | 1 | 0 | 0 | 1 | 0 | 50 | 0 | 0 | 0 |
+| **phaeosphaeria_leaf_spot** | 0 | 2 | 0 | 0 | 4 | 2 | 0 | 0 | 7 | 0 | 0 |
+| **southern_leaf_blight** | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| **southern_rust** | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+| Source | Images | Correct | Accuracy |
+|---|---|---|---|
+| cds | 157 | 150 | 95.5% |
+| kaggle | 417 | 391 | 93.8% |
+| maize_multiformat | 72 | 50 | 69.4% |
+| mendeley_bd | 213 | 207 | 97.2% |
+| ndisan | 274 | 264 | 96.4% |
+| neau | 85 | 82 | 96.5% |
+| rlnst | 290 | 263 | 90.7% |
+| up_field | 124 | 93 | 75.0% |
+

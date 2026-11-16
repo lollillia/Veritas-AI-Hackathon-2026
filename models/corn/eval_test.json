@@ -1,0 +1,77 @@
+{
+  "split": "test",
+  "n": 864,
+  "metrics": {
+    "accuracy": 0.9444444444444444,
+    "macro_f1": 0.9512590241556423,
+    "per_class": {
+      "common_rust": {
+        "precision": 0.9822222222222222,
+        "recall": 0.973568281938326,
+        "f1": 0.9778761061946902,
+        "support": 227
+      },
+      "healthy": {
+        "precision": 0.9926470588235294,
+        "recall": 1.0,
+        "f1": 0.996309963099631,
+        "support": 135
+      },
+      "leaf_blight": {
+        "precision": 0.9392712550607287,
+        "recall": 0.8923076923076924,
+        "f1": 0.9151873767258384,
+        "support": 260
+      },
+      "leaf_spot": {
+        "precision": 0.890625,
+        "recall": 0.9421487603305785,
+        "f1": 0.9156626506024097,
+        "support": 242
+      }
+    },
+    "confusion": {
+      "common_rust": {
+        "common_rust": 221,
+        "healthy": 0,
+        "leaf_blight": 3,
+        "leaf_spot": 3
+      },
+      "healthy": {
+        "common_rust": 0,
+        "healthy": 135,
+        "leaf_blight": 0,
+        "leaf_spot": 0
+      },
+      "leaf_blight": {
+        "common_rust": 2,
+        "healthy": 1,
+        "leaf_blight": 232,
+        "leaf_spot": 25
+      },
+      "leaf_spot": {
+        "common_rust": 2,
+        "healthy": 0,
+        "leaf_blight": 12,
+        "leaf_spot": 228
+      }
+    }
+  },
+  "by_source": {
+    "cds": {
+      "n": 157,
+      "correct": 153,
+      "accuracy": 0.9745222929936306
+    },
+    "kaggle": {
+      "n": 417,
+      "correct": 393,
+      "accuracy": 0.9424460431654677
+    },
+    "rlnst": {
+      "n": 290,
+      "correct": 270,
+      "accuracy": 0.9310344827586207
+    }
+  }
+}

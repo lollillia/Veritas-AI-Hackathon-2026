@@ -1,0 +1,273 @@
+{
+  "split": "test",
+  "n": 1719,
+  "metrics": {
+    "accuracy": 0.9191390343222804,
+    "macro_f1": 0.8319301391880161,
+    "per_class": {
+      "brown_spot": {
+        "precision": 0.7333333333333333,
+        "recall": 1.0,
+        "f1": 0.846153846153846,
+        "support": 11
+      },
+      "common_rust": {
+        "precision": 0.9176755447941889,
+        "recall": 0.9381188118811881,
+        "f1": 0.9277845777233782,
+        "support": 404
+      },
+      "curvularia_leaf_spot": {
+        "precision": 0.75,
+        "recall": 0.6,
+        "f1": 0.6666666666666665,
+        "support": 10
+      },
+      "eyespot": {
+        "precision": 0.875,
+        "recall": 0.525,
+        "f1": 0.6562500000000001,
+        "support": 40
+      },
+      "gray_leaf_spot": {
+        "precision": 0.903954802259887,
+        "recall": 0.9090909090909091,
+        "f1": 0.9065155807365439,
+        "support": 352
+      },
+      "healthy": {
+        "precision": 0.9445910290237467,
+        "recall": 0.9701897018970189,
+        "f1": 0.9572192513368983,
+        "support": 369
+      },
+      "northern_leaf_blight": {
+        "precision": 0.9330143540669856,
+        "recall": 0.9198113207547169,
+        "f1": 0.9263657957244654,
+        "support": 424
+      },
+      "northern_leaf_spot": {
+        "precision": 0.9272727272727272,
+        "recall": 0.9807692307692307,
+        "f1": 0.9532710280373831,
+        "support": 52
+      },
+      "phaeosphaeria_leaf_spot": {
+        "precision": 0.5833333333333334,
+        "recall": 0.4375,
+        "f1": 0.5,
+        "support": 16
+      },
+      "southern_leaf_blight": {
+        "precision": 1.0,
+        "recall": 0.9,
+        "f1": 0.9473684210526316,
+        "support": 20
+      },
+      "southern_rust": {
+        "precision": 0.8260869565217391,
+        "recall": 0.9047619047619048,
+        "f1": 0.8636363636363636,
+        "support": 21
+      }
+    },
+    "confusion": {
+      "brown_spot": {
+        "brown_spot": 11,
+        "common_rust": 0,
+        "curvularia_leaf_spot": 0,
+        "eyespot": 0,
+        "gray_leaf_spot": 0,
+        "healthy": 0,
+        "northern_leaf_blight": 0,
+        "northern_leaf_spot": 0,
+        "phaeosphaeria_leaf_spot": 0,
+        "southern_leaf_blight": 0,
+        "southern_rust": 0
+      },
+      "common_rust": {
+        "brown_spot": 1,
+        "common_rust": 379,
+        "curvularia_leaf_spot": 1,
+        "eyespot": 1,
+        "gray_leaf_spot": 5,
+        "healthy": 3,
+        "northern_leaf_blight": 10,
+        "northern_leaf_spot": 0,
+        "phaeosphaeria_leaf_spot": 2,
+        "southern_leaf_blight": 0,
+        "southern_rust": 2
+      },
+      "curvularia_leaf_spot": {
+        "brown_spot": 0,
+        "common_rust": 2,
+        "curvularia_leaf_spot": 6,
+        "eyespot": 0,
+        "gray_leaf_spot": 0,
+        "healthy": 0,
+        "northern_leaf_blight": 0,
+        "northern_leaf_spot": 0,
+        "phaeosphaeria_leaf_spot": 0,
+        "southern_leaf_blight": 0,
+        "southern_rust": 2
+      },
+      "eyespot": {
+        "brown_spot": 1,
+        "common_rust": 13,
+        "curvularia_leaf_spot": 1,
+        "eyespot": 21,
+        "gray_leaf_spot": 1,
+        "healthy": 2,
+        "northern_leaf_blight": 0,
+        "northern_leaf_spot": 1,
+        "phaeosphaeria_leaf_spot": 0,
+        "southern_leaf_blight": 0,
+        "southern_rust": 0
+      },
+      "gray_leaf_spot": {
+        "brown_spot": 0,
+        "common_rust": 8,
+        "curvularia_leaf_spot": 0,
+        "eyespot": 0,
+        "gray_leaf_spot": 320,
+        "healthy": 9,
+        "northern_leaf_blight": 13,
+        "northern_leaf_spot": 0,
+        "phaeosphaeria_leaf_spot": 2,
+        "southern_leaf_blight": 0,
+        "southern_rust": 0
+      },
+      "healthy": {
+        "brown_spot": 0,
+        "common_rust": 1,
+        "curvularia_leaf_spot": 0,
+        "eyespot": 1,
+        "gray_leaf_spot": 4,
+        "healthy": 358,
+        "northern_leaf_blight": 3,
+        "northern_leaf_spot": 1,
+        "phaeosphaeria_leaf_spot": 1,
+        "southern_leaf_blight": 0,
+        "southern_rust": 0
+      },
+      "northern_leaf_blight": {
+        "brown_spot": 1,
+        "common_rust": 9,
+        "curvularia_leaf_spot": 0,
+        "eyespot": 0,
+        "gray_leaf_spot": 21,
+        "healthy": 1,
+        "northern_leaf_blight": 390,
+        "northern_leaf_spot": 2,
+        "phaeosphaeria_leaf_spot": 0,
+        "southern_leaf_blight": 0,
+        "southern_rust": 0
+      },
+      "northern_leaf_spot": {
+        "brown_spot": 0,
+        "common_rust": 0,
+        "curvularia_leaf_spot": 0,
+        "eyespot": 0,
+        "gray_leaf_spot": 0,
+        "healthy": 1,
+        "northern_leaf_blight": 0,
+        "northern_leaf_spot": 51,
+        "phaeosphaeria_leaf_spot": 0,
+        "southern_leaf_blight": 0,
+        "southern_rust": 0
+      },
+      "phaeosphaeria_leaf_spot": {
+        "brown_spot": 0,
+        "common_rust": 1,
+        "curvularia_leaf_spot": 0,
+        "eyespot": 1,
+        "gray_leaf_spot": 2,
+        "healthy": 4,
+        "northern_leaf_blight": 1,
+        "northern_leaf_spot": 0,
+        "phaeosphaeria_leaf_spot": 7,
+        "southern_leaf_blight": 0,
+        "southern_rust": 0
+      },
+      "southern_leaf_blight": {
+        "brown_spot": 0,
+        "common_rust": 0,
+        "curvularia_leaf_spot": 0,
+        "eyespot": 0,
+        "gray_leaf_spot": 1,
+        "healthy": 1,
+        "northern_leaf_blight": 0,
+        "northern_leaf_spot": 0,
+        "phaeosphaeria_leaf_spot": 0,
+        "southern_leaf_blight": 18,
+        "southern_rust": 0
+      },
+      "southern_rust": {
+        "brown_spot": 1,
+        "common_rust": 0,
+        "curvularia_leaf_spot": 0,
+        "eyespot": 0,
+        "gray_leaf_spot": 0,
+        "healthy": 0,
+        "northern_leaf_blight": 1,
+        "northern_leaf_spot": 0,
+        "phaeosphaeria_leaf_spot": 0,
+        "southern_leaf_blight": 0,
+        "southern_rust": 19
+      }
+    }
+  },
+  "by_source": {
+    "up_field": {
+      "n": 125,
+      "correct": 92,
+      "accuracy": 0.736
+    },
+    "maize_multiformat": {
+      "n": 72,
+      "correct": 58,
+      "accuracy": 0.8055555555555556
+    },
+    "mendeley_bd": {
+      "n": 213,
+      "correct": 208,
+      "accuracy": 0.9765258215962441
+    },
+    "neau": {
+      "n": 85,
+      "correct": 79,
+      "accuracy": 0.9294117647058824
+    },
+    "cds": {
+      "n": 157,
+      "correct": 149,
+      "accuracy": 0.9490445859872612
+    },
+    "china_2": {
+      "n": 82,
+      "correct": 76,
+      "accuracy": 0.926829268292683
+    },
+    "kaggle": {
+      "n": 416,
+      "correct": 390,
+      "accuracy": 0.9375
+    },
+    "ndisan": {
+      "n": 274,
+      "correct": 258,
+      "accuracy": 0.9416058394160584
+    },
+    "rlnst": {
+      "n": 290,
+      "correct": 269,
+      "accuracy": 0.9275862068965517
+    },
+    "xtu502": {
+      "n": 5,
+      "correct": 1,
+      "accuracy": 0.2
+    }
+  }
+}
