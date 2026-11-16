@@ -85,3 +85,9 @@ def test_healthy_must_not_have_factors(tmp_path):
     bad = GOOD.replace(f"healthy:\n  name: Healthy leaf\n", f"healthy:\n  name: Healthy leaf\n  season: {{months: [7], source: {SRC}}}\n")
     with pytest.raises(KnowledgeError, match="healthy"):
         load_knowledge(*_files(tmp_path, bad), labels=LABELS)
+
+
+def test_real_knowledge_file_is_valid():
+    from app.detectors.base import LABELS
+    k = load_knowledge()
+    assert set(k) == set(LABELS) - {"not_corn_leaf"}

@@ -1,0 +1,262 @@
+# Disease knowledge for weighing the photo model's answer. Every factor traces to a source in SOURCES.md.
+# Region codes: ISO 3166-1 country ("US") or ISO 3166-2 state/province ("US-IA"); a state entry overrides
+# the country. Levels: common, occasional, rare, not_reported, unknown. Anything not listed is unknown.
+# season.months: months when the disease is typically found in the northern temperate zone.
+# weather: favourable 14-day mean temperature range, plus a moisture condition.
+
+healthy:
+  name: Healthy leaf
+  pathogen: none
+  about: >-
+    A healthy corn leaf is evenly green, with no spots, streaks, pustules or dead patches. Corn grows best
+    with daytime temperatures of about 77 to 91°F (25 to 33°C), nights of 62 to 74°F, and steady water,
+    using roughly 20 to 22 inches over a season with the peak around silking. Heat above 95°F during
+    pollination, drought in the weeks around silking, frost and waterlogged soil are the main stresses.
+    Pale or yellow leaves are not always disease: nutrient shortage, drought and cold can also discolour
+    leaves, so check the whole field before drawing conclusions.
+  sources:
+    - https://agcrops.osu.edu/specialization-areas/corn/how-climate-affects-corn-production
+
+common_rust:
+  name: Common rust
+  pathogen: Puccinia sorghi (fungus)
+  about: >-
+    Common rust is caused by the fungus Puccinia sorghi. It starts as pale flecks that turn into powdery,
+    brick-red to cinnamon-brown pustules about 1/8 inch long on both the upper and lower leaf surfaces;
+    old pustules turn black. It is found throughout the corn-growing regions of the United States and
+    southern Canada, carried north each year on wind from warmer regions, and usually appears from late
+    June, earlier than southern rust. Cool, moist weather favours it: 61 to 77°F (16 to 25°C) with at
+    least six hours of dew. Hot, dry weather stops it. It is seldom a yield problem in hybrid corn but can
+    be on seed corn. Southern rust looks similar but forms smaller, orange, densely packed pustules mostly
+    on the upper surface.
+  sources:
+    - https://cropprotectionnetwork.org/encyclopedia/common-rust-of-corn
+    - https://content.ces.ncsu.edu/corn-rusts-common-and-southern-rust
+    - https://lgpress.clemson.edu/journal/common-and-southern-rust-in-field-corn/
+  regions:
+    US: {level: common, source: https://content.ces.ncsu.edu/corn-rusts-common-and-southern-rust}
+    CA: {level: common, source: https://content.ces.ncsu.edu/corn-rusts-common-and-southern-rust}
+  season:
+    months: [4, 5, 6, 7, 8]
+    source: https://lgpress.clemson.edu/journal/common-and-southern-rust-in-field-corn/
+  weather:
+    temp_c: [16, 25]
+    rh_min_pct: 80
+    source: https://content.ces.ncsu.edu/corn-rusts-common-and-southern-rust
+
+southern_rust:
+  name: Southern rust
+  pathogen: Puccinia polysora (fungus)
+  about: >-
+    Southern rust is caused by the fungus Puccinia polysora. It forms small, round to oval, light orange
+    pustules packed densely, almost only on the upper leaf surface, sometimes with a yellow halo; lesions
+    can also appear on husks, sheaths and stalks. It does not overwinter in the Corn Belt: spores blow
+    north from the tropics and the deep South, so it is common in the southeastern United States and
+    reaches the Midwest later, usually from July, in hot and humid years. It needs warm weather, about 77
+    to 88°F (25 to 31°C), with at least four hours of dew, and new pustules appear every week or so. It can
+    cause large yield losses if it arrives before the grain fills. Common rust has larger, elongated,
+    brick-red pustules on both leaf surfaces.
+  sources:
+    - https://content.ces.ncsu.edu/corn-rusts-common-and-southern-rust
+    - https://cropwatch.unl.edu/plant-disease/corn/southern-rust/
+    - https://lgpress.clemson.edu/journal/common-and-southern-rust-in-field-corn/
+    - https://cropprotectionnetwork.org/maps/southern-corn-rust
+  regions:
+    US: {level: occasional, source: https://content.ces.ncsu.edu/corn-rusts-common-and-southern-rust}
+    US-SC: {level: common, source: https://lgpress.clemson.edu/journal/common-and-southern-rust-in-field-corn/}
+    US-NC: {level: common, source: https://content.ces.ncsu.edu/corn-rusts-common-and-southern-rust}
+    US-GA: {level: common, source: https://cropwatch.unl.edu/plant-disease/corn/southern-rust/}
+    US-FL: {level: common, source: https://cropwatch.unl.edu/plant-disease/corn/southern-rust/}
+    US-AL: {level: common, source: https://cropwatch.unl.edu/plant-disease/corn/southern-rust/}
+    US-MS: {level: common, source: https://cropwatch.unl.edu/plant-disease/corn/southern-rust/}
+    US-LA: {level: common, source: https://cropwatch.unl.edu/plant-disease/corn/southern-rust/}
+    US-TN: {level: common, source: https://cropwatch.unl.edu/plant-disease/corn/southern-rust/}
+  season:
+    months: [7, 8, 9]
+    source: https://lgpress.clemson.edu/journal/common-and-southern-rust-in-field-corn/
+  weather:
+    temp_c: [25, 31]
+    rh_min_pct: 80
+    source: https://content.ces.ncsu.edu/corn-rusts-common-and-southern-rust
+
+northern_leaf_blight:
+  name: Northern leaf blight
+  pathogen: Exserohilum turcicum (fungus; also called Setosphaeria turcica)
+  about: >-
+    Northern corn leaf blight is caused by the fungus Exserohilum turcicum. It makes long, cigar-shaped,
+    grey-green to tan lesions 1 to 7 inches long, usually starting on the lower leaves; in humid weather
+    dark spores give lesions a dirty look. The fungus survives the winter on corn residue and spreads by
+    wind and rain splash. Moderate temperatures of 64 to 81°F (18 to 27°C) with 6 to 18 hours of leaf
+    wetness favour it, so it follows long dews and overcast days, and in Indiana it is most often seen late
+    in the season. It is important in the US Corn Belt and Ontario and in mid-altitude tropics of Africa,
+    Latin America, China and India. Look-alikes include Goss's wilt, Stewart's wilt, Diplodia leaf streak
+    and southern leaf blight.
+  sources:
+    - https://cropprotectionnetwork.org/encyclopedia/northern-corn-leaf-blight-of-corn
+    - https://en.wikipedia.org/wiki/Northern_corn_leaf_blight
+    - https://www.extension.purdue.edu/extmedia/bp/bp-84-w.pdf
+  regions:
+    US: {level: common, source: https://en.wikipedia.org/wiki/Northern_corn_leaf_blight}
+    CA: {level: common, source: https://en.wikipedia.org/wiki/Northern_corn_leaf_blight}
+    CN: {level: occasional, source: https://en.wikipedia.org/wiki/Northern_corn_leaf_blight}
+    IN: {level: occasional, source: https://en.wikipedia.org/wiki/Northern_corn_leaf_blight}
+  season:
+    months: [6, 7, 8, 9]
+    source: https://www.extension.purdue.edu/extmedia/bp/bp-84-w.pdf
+  weather:
+    temp_c: [18, 27]
+    rh_min_pct: 80
+    source: https://cropprotectionnetwork.org/encyclopedia/northern-corn-leaf-blight-of-corn
+
+southern_leaf_blight:
+  name: Southern leaf blight
+  pathogen: Bipolaris maydis (fungus; also called Cochliobolus heterostrophus)
+  about: >-
+    Southern corn leaf blight is caused by the fungus Bipolaris maydis. Race O, the most common, makes tan,
+    somewhat rectangular lesions with reddish-brown borders on leaves; race T also attacks husks, stalks,
+    ears and cobs. Lesions are smaller and more rectangular than northern leaf blight. It is found in most
+    corn-growing regions of the world and needs free water on the leaf with warm temperatures, about 68 to
+    90°F (20 to 32°C), and high humidity. The fungus overwinters in corn debris. In 1970 race T spread from
+    the southern United States to Minnesota and Maine and destroyed about 15% of the Corn Belt's crop; in
+    tropical climates losses can reach 70%. Resistant hybrids are available.
+  sources:
+    - https://cropprotectionnetwork.org/encyclopedia/southern-corn-leaf-blight-of-corn
+    - https://en.wikipedia.org/wiki/Southern_corn_leaf_blight
+  weather:
+    temp_c: [20, 32]
+    rh_min_pct: 80
+    source: https://en.wikipedia.org/wiki/Southern_corn_leaf_blight
+
+gray_leaf_spot:
+  name: Gray leaf spot
+  pathogen: Cercospora zeae-maydis and Cercospora zeina (fungi)
+  about: >-
+    Gray leaf spot is caused by the fungi Cercospora zeae-maydis and Cercospora zeina. Lesions start as
+    small spots with a yellow halo and become long, narrow, rectangular, grey to tan lesions that run
+    between the leaf veins with straight edges. It needs warm temperatures, about 75 to 95°F (24 to 35°C),
+    long periods of high humidity and around 12 hours of leaf wetness from fog, dew or light rain; cooler
+    or drier weather slows it. It is economically important in the US Midwest and Mid-Atlantic and is also
+    common in Mexico, Central and northern South America, Africa, Europe, China, India, the Philippines and
+    Southeast Asia. Lesions take two to three weeks to develop. Northern leaf blight lesions are longer and
+    cigar-shaped, with rounded ends.
+  sources:
+    - https://en.wikipedia.org/wiki/Corn_grey_leaf_spot
+    - https://cropwatch.unl.edu/2018/differentiating-corn-leaf-diseases/
+  regions:
+    US: {level: common, source: https://en.wikipedia.org/wiki/Corn_grey_leaf_spot}
+    MX: {level: common, source: https://en.wikipedia.org/wiki/Corn_grey_leaf_spot}
+    CN: {level: common, source: https://en.wikipedia.org/wiki/Corn_grey_leaf_spot}
+    IN: {level: common, source: https://en.wikipedia.org/wiki/Corn_grey_leaf_spot}
+    PH: {level: common, source: https://en.wikipedia.org/wiki/Corn_grey_leaf_spot}
+  season:
+    months: [6, 7, 8, 9]
+    source: https://en.wikipedia.org/wiki/Corn_grey_leaf_spot
+  weather:
+    temp_c: [24, 35]
+    rh_min_pct: 85
+    source: https://en.wikipedia.org/wiki/Corn_grey_leaf_spot
+
+northern_leaf_spot:
+  name: Northern leaf spot
+  pathogen: Bipolaris zeicola (fungus; also called Cochliobolus carbonum)
+  about: >-
+    Northern corn leaf spot is caused by the fungus Bipolaris zeicola (Cochliobolus carbonum), which has
+    several races. Lesions are circular to oblong, tan to brown, 1/8 to 1/2 inch long, often lined up along
+    the leaf veins like a string of pearls. Symptoms usually show around silking or at maturity. Warm,
+    humid weather favours it. The fungus overwinters in crop residue, and spores can also blow in from
+    other fields, so it has become more common with no-till farming; crop rotation and tillage help, and
+    resistant hybrids are the most effective control. It can be confused with other leaf spots such as
+    gray leaf spot and southern leaf blight.
+  sources:
+    - https://cals.cornell.edu/field-crops/corn/diseases-of-corn/northern-corn-leaf-spot
+  season:
+    months: [7, 8, 9]
+    source: https://cals.cornell.edu/field-crops/corn/diseases-of-corn/northern-corn-leaf-spot
+
+eyespot:
+  name: Eyespot
+  pathogen: Aureobasidium zeae (fungus; also called Kabatiella zeae)
+  about: >-
+    Eyespot is caused by the fungus Aureobasidium zeae (Kabatiella zeae), which lives in corn residue.
+    Lesions are tiny, 1/16 to 1/8 inch, round spots with a tan centre, a brown to purple ring and a narrow
+    yellow halo, like a small eye; they often appear in patches and can merge. Symptoms can start as early
+    as the V3 to V4 leaf stage. It prefers cool (around 70°F, 21°C), humid, wet weather and is most common
+    in the northern Midwest, such as Michigan, Minnesota and Wisconsin, and in New York; it is very rare in
+    Kentucky. Continuous corn, no-till and susceptible hybrids raise the risk. Curvularia leaf spot looks
+    almost identical but prefers warm weather.
+  sources:
+    - https://extension.umn.edu/agriculture/crop-production/corn/eyespot-on-corn
+    - https://cals.cornell.edu/field-crops/corn/diseases-of-corn/eyespot
+    - https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/PPA-51-Curvularia-Leaf-Spot-of-Corn--Remediated.pdf
+  regions:
+    US-MI: {level: common, source: https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/PPA-51-Curvularia-Leaf-Spot-of-Corn--Remediated.pdf}
+    US-MN: {level: common, source: https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/PPA-51-Curvularia-Leaf-Spot-of-Corn--Remediated.pdf}
+    US-WI: {level: common, source: https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/PPA-51-Curvularia-Leaf-Spot-of-Corn--Remediated.pdf}
+    US-NY: {level: occasional, source: https://cals.cornell.edu/field-crops/corn/diseases-of-corn/eyespot}
+    US-KY: {level: rare, source: https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/PPA-51-Curvularia-Leaf-Spot-of-Corn--Remediated.pdf}
+  season:
+    months: [6, 7, 8, 9]
+    source: https://extension.umn.edu/agriculture/crop-production/corn/eyespot-on-corn
+  weather:
+    temp_c: [15, 24]
+    rh_min_pct: 80
+    source: https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/PPA-51-Curvularia-Leaf-Spot-of-Corn--Remediated.pdf
+
+phaeosphaeria_leaf_spot:
+  name: Phaeosphaeria leaf spot
+  pathogen: historically Phaeosphaeria maydis (fungus); the exact cause is still being studied
+  about: >-
+    Phaeosphaeria leaf spot, also called maize white spot, makes small pale to bleached, round or oval
+    spots, often with a darker border; with a hand lens, tiny black fruiting bodies can be seen inside the
+    lesions. It has long been linked to the fungus Phaeosphaeria maydis, but recent work shows the exact
+    cause is still unresolved. In 2026 a similar leaf spot emerged in about 16 Michigan counties with
+    notable severity, with similar reports from New York and Pennsylvania, and Michigan State University is
+    investigating it. Little is known yet about the weather that favours it in the United States. Other
+    small leaf spots, such as eyespot, Curvularia leaf spot and gray leaf spot, can look similar.
+  sources:
+    - https://www.michiganfarmnews.com/about/news-media/msu-seeks-producer-assistance-emerging-corn-leaf-spot-disease-investigation
+  regions:
+    US-MI: {level: occasional, source: https://www.michiganfarmnews.com/about/news-media/msu-seeks-producer-assistance-emerging-corn-leaf-spot-disease-investigation}
+    US-NY: {level: occasional, source: https://www.michiganfarmnews.com/about/news-media/msu-seeks-producer-assistance-emerging-corn-leaf-spot-disease-investigation}
+    US-PA: {level: occasional, source: https://www.michiganfarmnews.com/about/news-media/msu-seeks-producer-assistance-emerging-corn-leaf-spot-disease-investigation}
+
+brown_spot:
+  name: Brown spot (Physoderma)
+  pathogen: Physoderma maydis (chytrid fungus)
+  about: >-
+    Physoderma brown spot is caused by Physoderma maydis, a fungus whose swimming spores need water to
+    infect, so infection happens mostly in the leaf whorl when rain or irrigation water collects there.
+    It makes tiny yellow to brown spots, often in bands across the leaf, and larger, dark purple to
+    chocolate-brown spots on the midrib, which is the best way to recognise it; stalks, sheaths and husks
+    can also be affected. It needs light, free water and warm temperatures of about 75 to 85°F (24 to 29°C)
+    and is more common in wet seasons, continuous corn and reduced tillage. In Nebraska and the Midwest it
+    is usually minor. Early lesions can be mistaken for southern rust or Curvularia leaf spot.
+  sources:
+    - https://cropwatch.unl.edu/plant-disease/corn/physoderma-brown-spot/
+    - https://cropprotectionnetwork.org/encyclopedia/physoderma-brown-spot-of-corn
+    - https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/PPA-51-Curvularia-Leaf-Spot-of-Corn--Remediated.pdf
+  regions:
+    US-NE: {level: rare, source: https://cropwatch.unl.edu/plant-disease/corn/physoderma-brown-spot/}
+  weather:
+    temp_c: [24, 29]
+    rainy_days_min: 8
+    source: https://cropprotectionnetwork.org/encyclopedia/physoderma-brown-spot-of-corn
+
+curvularia_leaf_spot:
+  name: Curvularia leaf spot
+  pathogen: Curvularia lunata (fungus)
+  about: >-
+    Curvularia leaf spot is caused by the fungus Curvularia lunata. It starts as very small, 1/16 to 1/8
+    inch, round tan lesions with a brown border and often a yellow halo, from a few scattered spots to
+    lesions covering large parts of the leaf, at any growth stage. It causes yield loss in tropical areas
+    and is one of the most important corn diseases in China. In the United States it was first reported in
+    Louisiana in 2017 and Kentucky in 2018, with low losses so far. Warm, humid weather favours it, and it
+    is worse in continuous corn and conservation tillage. Eyespot looks almost identical but prefers cool
+    weather; Physoderma brown spot and Holcus leaf spot are other look-alikes.
+  sources:
+    - https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/PPA-51-Curvularia-Leaf-Spot-of-Corn--Remediated.pdf
+  regions:
+    CN: {level: common, source: https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/PPA-51-Curvularia-Leaf-Spot-of-Corn--Remediated.pdf}
+    US: {level: rare, source: https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/PPA-51-Curvularia-Leaf-Spot-of-Corn--Remediated.pdf}
+    US-LA: {level: occasional, source: https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/PPA-51-Curvularia-Leaf-Spot-of-Corn--Remediated.pdf}
+    US-KY: {level: occasional, source: https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/PPA-51-Curvularia-Leaf-Spot-of-Corn--Remediated.pdf}
