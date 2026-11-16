@@ -278,17 +278,29 @@ curvularia_leaf_spot:
   name: Curvularia leaf spot
   pathogen: Curvularia lunata (fungus)
   about: >-
-    Curvularia leaf spot is caused by the fungus Curvularia lunata. It starts as very small, 1/16 to 1/8
-    inch, round tan lesions with a brown border and often a yellow halo, from a few scattered spots to
-    lesions covering large parts of the leaf, at any growth stage. It causes yield loss in tropical areas
-    and is one of the most important corn diseases in China. In the United States it was first reported in
-    Louisiana in 2017 and Kentucky in 2018, with low losses so far. Warm, humid weather favours it, and it
-    is worse in continuous corn and conservation tillage. Eyespot looks almost identical but prefers cool
-    weather; Physoderma brown spot and Holcus leaf spot are other look-alikes.
+    Curvularia leaf spot is caused by the fungus Curvularia lunata. Lesions are small, about 1 to 4 mm, round
+    to oval, with a tan or white centre, an orange-brown to dark-brown border and a yellow halo; on
+    susceptible hybrids they merge into larger dead patches, mostly in the mid to upper canopy. It thrives
+    in hot, humid weather, around 25°C with 80 to 90% humidity, and peaks later in summer, often after rain
+    during grain fill. It is the third most destructive corn leaf disease in China, with average losses of
+    about 15%, and is well established in India. In the United States it was first reported in Louisiana in
+    2017 and Kentucky in 2018, and has since been seen in Mississippi and Iowa, with low losses so far.
+    Eyespot looks almost identical but prefers cool weather and appears earlier in the season.
   sources:
     - https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/PPA-51-Curvularia-Leaf-Spot-of-Corn--Remediated.pdf
+    - notes/curvularia-leaf-spot.md
   regions:
     CN: {level: common, source: https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/PPA-51-Curvularia-Leaf-Spot-of-Corn--Remediated.pdf}
+    IN: {level: common, source: notes/curvularia-leaf-spot.md}
     US: {level: rare, source: https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/PPA-51-Curvularia-Leaf-Spot-of-Corn--Remediated.pdf}
     US-LA: {level: occasional, source: https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/PPA-51-Curvularia-Leaf-Spot-of-Corn--Remediated.pdf}
     US-KY: {level: occasional, source: https://publications.mgcafe.uky.edu/sites/publications.ca.uky.edu/files/PPA-51-Curvularia-Leaf-Spot-of-Corn--Remediated.pdf}
+    US-MS: {level: occasional, source: notes/curvularia-leaf-spot.md}
+    US-IA: {level: occasional, source: notes/curvularia-leaf-spot.md}
+  season:
+    months: [7, 8, 9]
+    source: notes/curvularia-leaf-spot.md
+  weather:
+    temp_c: [23, 27]
+    rh_min_pct: 80
+    source: notes/curvularia-leaf-spot.md

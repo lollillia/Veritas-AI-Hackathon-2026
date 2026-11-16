@@ -11,9 +11,9 @@ after reading on 15 Nov 2026:
 Only *used* sources back a factor. Wikipedia is used only where no other readable source on the list covered the fact: countries outside the US for gray leaf spot and northern leaf blight, and the temperature range for southern leaf blight (the USDA paper gives none). The sources are mostly about the United States, so region levels exist
 mainly for US states and a few countries; everything else is "unknown" (neutral, ×1.0).
 
-The only disease with **no temperature range** in `diseases.yaml` is Curvularia leaf spot (Kentucky says
-only "warm, humid"), so its weather factor is neutral. Phaeosphaeria leaf spot's and northern leaf spot's
-ranges come from notes the user provided (listed under those diseases).
+Every disease in `diseases.yaml` now has a temperature range. Those for Phaeosphaeria leaf spot, northern
+leaf spot and Curvularia leaf spot come from notes the user provided (listed under those diseases), as no
+readable web source on the list gave numbers for them.
 
 ## General
 - https://www.vegetables.cornell.edu/pest-management/disease-factsheets/sweet-corn-diseases-and-control-measures/ (not read)
@@ -85,6 +85,7 @@ ranges come from notes the user provided (listed under those diseases).
 - https://link.springer.com/article/10.1007/s41348-024-01019-4 (not read)
 
 ### Gray leaf spot (this group also holds the Curvularia leaf spot sources)
+- notes/curvularia-leaf-spot.md (used for Curvularia leaf spot: notes pasted by the user on 15 Nov 2026, kept verbatim; they cite Garhwal et al. 2022 and Wang et al. 2022 without links. Source of the 25±2°C and 80-90% humidity optimum, later-summer timing, India as a major region, and Mississippi and central Iowa in 2025)
 - https://en.wikipedia.org/wiki/Corn_grey_leaf_spot (used for the countries outside the US only: Mexico, China, India, Philippines; its 24-35°C range was replaced by Purdue's 75-85°F)
 - https://www.extension.purdue.edu/extmedia/BP/BP-56-W.pdf (used: infection at 75-85°F with more than 90% relative humidity; one of the most important leaf diseases in Indiana, worst in southern Indiana)
 - https://www.farms.com/field-guide/crop-diseases/gray-leaf-spot.aspx (blocked: the reading tool refused the page)
