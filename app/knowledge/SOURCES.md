@@ -8,7 +8,7 @@ after reading on 15 Nov 2026:
 - **blocked**: the site refused automated reading (403, login, bot check, or an unreadable PDF)
 - **not read**: skipped to meet the demo deadline
 
-Only *used* sources back a factor. The sources are mostly about the United States, so region levels exist
+Only *used* sources back a factor. Wikipedia is used only where no other readable source on the list covered the fact: countries outside the US for gray leaf spot and northern leaf blight, and the temperature range for southern leaf blight (the USDA paper gives none). The sources are mostly about the United States, so region levels exist
 mainly for US states and a few countries; everything else is "unknown" (neutral, ×1.0).
 
 Diseases with **no temperature range** in `diseases.yaml`, because no readable source gave one: northern
@@ -51,30 +51,30 @@ Phaeosphaeria leaf spot (cause still under study). Their weather factor is neutr
 - https://cropwatch.unl.edu/plant-disease/corn/southern-rust/ (used: 80-90°F, high humidity, arrives in Nebraska early to mid July, common in the southeastern US)
 
 ## Blights
-- https://www.ars.usda.gov/ARSUserFiles/60663500/Publications/Bruns/2017/Bruns_2017_Corn%20Leaf%20Blight.pdf (not read)
+- https://www.ars.usda.gov/ARSUserFiles/60663500/Publications/Bruns/2017/Bruns_2017_Corn%20Leaf%20Blight.pdf (used: southern leaf blight is found in all corn areas, most prevalent in warm temperate and humid subtropical regions; 1970-71 epidemic. No temperature numbers)
 - https://cropwatch.unl.edu/plant-disease/corn/goss-wilt/ (not read)
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC6640275/ (not read)
 - https://apsjournals.apsnet.org/doi/10.1094/PDIS-06-21-1151-RE (not read)
 
 ### Northern corn leaf blight
-- https://en.wikipedia.org/wiki/Northern_corn_leaf_blight (used: 18-27°C wet periods; Corn Belt and Ontario; mid-altitude tropics of Africa, Latin America, China, India; look-alikes)
+- https://en.wikipedia.org/wiki/Northern_corn_leaf_blight (used for Canada, China and India and look-alikes only; temperatures agree with Purdue, Minnesota and Bayer)
 - https://www.extension.purdue.edu/extmedia/bp/bp-84-w.pdf (used: 64-81°F, 6-18 h leaf wetness, late season in Indiana)
 - https://cropprotectionnetwork.org/encyclopedia/northern-corn-leaf-blight-of-corn (used: 64-81°F, more than 6 h leaf wetness)
 - https://www.sciencedirect.com/science/article/abs/pii/S026121941930328X (not read)
-- https://extension.umn.edu/agriculture/crop-production/corn/northern-corn-leaf-blight (not read)
+- https://extension.umn.edu/agriculture/crop-production/corn/northern-corn-leaf-blight (used: 64-80°F with prolonged moisture, at or after silking, common in the Midwestern US)
 - https://www.corteva.com/us/Resources/crop-protection/disease-mgmt/managing-threat-northern-corn-leaf-blight.html (not read)
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC12211160/ (not read)
 - https://www.labmanager.com/northern-corn-leaf-blight-genes-identified-in-new-study-5414 (not read)
 - https://www.sciencedirect.com/science/article/pii/S2667064X24002781 (not read)
 - https://apsjournals.apsnet.org/doi/10.1094/PHYTO-07-21-0298-R (not read)
 - https://extension.sdstate.edu/northern-corn-leaf-blight-developing-corn (not read)
-- https://www.cropscience.bayer.us/articles/channel/northern-corn-leaf-blight-identification-environment-and-management (not read)
+- https://www.cropscience.bayer.us/articles/channel/northern-corn-leaf-blight-identification-environment-and-management (used: confirms 64-81°F with moisture and high humidity)
 
 ### Southern corn leaf blight
 - https://en.wikipedia.org/wiki/Southern_corn_leaf_blight (used: 68-90°F with high humidity, worldwide, 1970 US epidemic)
 - https://www.sciencedirect.com/topics/agricultural-and-biological-sciences/bipolaris-maydis (not read)
 - https://cropprotectionnetwork.org/encyclopedia/southern-corn-leaf-blight-of-corn (used: pathogen, races O and T, symptoms)
-- https://ui.adsabs.harvard.edu/abs/2017AgrJ..109.1218B/abstract (not read)
+- https://ui.adsabs.harvard.edu/abs/2017AgrJ..109.1218B/abstract (blocked: error 405; the same paper was read from the USDA PDF)
 - (the USDA Bruns 2017 PDF is listed here again; see Blights)
 
 ## Spots
@@ -85,9 +85,9 @@ Phaeosphaeria leaf spot (cause still under study). Their weather factor is neutr
 - https://link.springer.com/article/10.1007/s41348-024-01019-4 (not read)
 
 ### Gray leaf spot (this group also holds the Curvularia leaf spot sources)
-- https://en.wikipedia.org/wiki/Corn_grey_leaf_spot (used: two pathogens, 24-35°C, 12 h leaf wetness, US Midwest and Mid-Atlantic, Mexico, China, India, Philippines and other regions)
-- https://www.extension.purdue.edu/extmedia/BP/BP-56-W.pdf (not read)
-- https://www.farms.com/field-guide/crop-diseases/gray-leaf-spot.aspx (not read)
+- https://en.wikipedia.org/wiki/Corn_grey_leaf_spot (used for the countries outside the US only: Mexico, China, India, Philippines; its 24-35°C range was replaced by Purdue's 75-85°F)
+- https://www.extension.purdue.edu/extmedia/BP/BP-56-W.pdf (used: infection at 75-85°F with more than 90% relative humidity; one of the most important leaf diseases in Indiana, worst in southern Indiana)
+- https://www.farms.com/field-guide/crop-diseases/gray-leaf-spot.aspx (blocked: the reading tool refused the page)
 - https://www.farmprogress.com/corn/corn-leaf-blight-can-reduce-yields-but-is-a-manageable-disease (not read)
 - https://www.researchgate.net/publication/415574720_Curvularia_lunata_as_a_versatile_pathogen_causing_leaf_spot_diseases_in_diverse_plant_species_and_its_management_strategies (not read; ResearchGate usually blocks automated reading)
 - https://data.mendeley.com/datasets/hmkd6nbngr/1 (not read; a dataset)
