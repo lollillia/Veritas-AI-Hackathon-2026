@@ -167,7 +167,8 @@ Notes:
 - Every dataset used by a model now has a public download link. Use the Hugging Face copy for one download, and
   check licences before sharing any images.
 - Not used by any model: `data/raw/23669328` (Iowa State common-rust scans), `data/raw/yusuf_corn` (duplicates
-  of `kaggle`), `data/raw/southern_corn_rust_dataset`. See `data/README.md`.
+  of `kaggle`), `data/raw/southern_corn_rust_dataset` (partial download of
+  https://www.scidb.cn/en/detail?dataSetId=557575359759908864). See `data/README.md`.
 - Per-dataset details (classes, places, dates, duplicates) are in each `data/raw/<folder>/README.md` and
   `data/README.md`.
 
