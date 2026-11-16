@@ -1,8 +1,8 @@
 # Which detector the website uses: hf_pretrained | finetuned | llm_vision | gated
-detector: gated
+detector: finetuned
 
 # Below this confidence the UI shows "not sure".
-min_confidence: 0.5   # with the gated detector, non-corn photos are caught by Claude; at 0.5 ~2% of corn photos show "not sure"
+min_confidence: 0.5   # finetuned cannot say "not a corn leaf"; 0.9 would show "not sure" for ~83% of non-corn photos but also ~16% of corn photos
 
 # Secrets are never stored here. Only the NAME of the environment variable.
 llm_vision:
